@@ -7,7 +7,10 @@
 - [MSP430 Launchpad Baud Rate](https://e2e.ti.com/support/microcontrollers/msp430/f/166/t/287659)
 
 #### ESP8266
-- [Rancid Bacon ESP8266 WiFi Module Quick Start Guide](http://rancidbacon.com/files/kiwicon8/ESP8266_WiFi_Module_Quick_Start_Guide_v_1.0.4.pdf)
+- [**Official Documentation**](https://www.espressif.com/en/products/hardware/esp8266ex/resources)
+- [AT Instruction Set](https://www.espressif.com/sites/default/files/documentation/4a-esp8266_at_instruction_set_en.pdf)
+- [Quick Start Guide](https://www.espressif.com/sites/default/files/documentation/esp8266_quick_start_guide_en.pdf)
+- [Rancid Bacon Quick Start Guide](http://rancidbacon.com/files/kiwicon8/ESP8266_WiFi_Module_Quick_Start_Guide_v_1.0.4.pdf)
 
 #### Servo
 - [Video: Servo Tower Pro SG90 (with MSP430 Launchpad)](https://www.youtube.com/watch?v=b0SYQ7JHgt4)
