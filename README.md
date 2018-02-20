@@ -1,6 +1,8 @@
 # SuperCamper
 
-## Resources
+- [**Google Docs for notes**](https://docs.google.com/document/d/1ghPUo2Mq59oIINfaeo2sNloTlBWxF4HawLVsi7_dm4M/edit?usp=sharing)
+
+## Online Resources
 
 #### ESP8266
 - [**Official Documentation**](https://www.espressif.com/en/products/hardware/esp8266ex/resources)
@@ -16,7 +18,7 @@
 - [Video: Servo Tower Pro SG90 (with MSP430 Launchpad)](https://www.youtube.com/watch?v=b0SYQ7JHgt4)
     - [Code](https://bitbucket.org/SiraitX/msp430/src/b059473279f3ff28051b57a3babaa9818210bb24/servo/?at=default)
 
-#### Servo
+#### Projects
 - [TI Community IoT Servo Controller (ESP8266)](https://e2e.ti.com/group/launchyourdesign/m/tivaarmmicrocontrollerprojects/666222)
 - [MSP430 & ESP8266 as Server and Client](https://www.hackster.io/ctroberts/20-wifi-connected-hardware-solution-with-esp8266-fb5995)
 
