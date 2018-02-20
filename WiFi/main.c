@@ -1,5 +1,6 @@
 #include "msp430g2553.h"
 #include <msp430.h>
+#include <string.h>
 
 #define TXLED BIT0
 //#define RXLED BIT6
@@ -16,16 +17,48 @@
 unsigned int PWM_Period     = (MCU_CLOCK / PWM_FREQUENCY);  // PWM Period
 unsigned int PWM_Duty       = 0;                            // %
 
-//const char string[] = { "AT\r\n" };
-const char string[] = { "AT+CWJAP=\"1\",\"PupsiBel\"\r\n" };
-unsigned int i; //Counter
+//Server.
+const char * Server[]={
+"AT+CWMODE=3\r\n",
+"AT+CWJAP=\"meng-project\",\"ptzcamera\"\r\n",
+"AT+CIPMUX=1\r\n",
+"AT+CIPSERVER=1,100\r\n",
+};
+
+//WiFi access point.
+const char * AP[]={
+"AT+RST\r\n",
+"AT+CWMODE=3\r\n",
+"AT+CWSAP=\"Test\",\"password\",3,0\r\n",
+"AT+CIFSR\r\n",
+"AT+CIPMUX=1\r\n",
+"AT+CIPSERVER=1,100\r\n",
+"AT+CWLIF\r\n",
+};
+
+
+//Creates TCP server. Port number is 333 by default.
+//const char test[] = {"AT+CIPSERVER=1,100\r\n"};
+
+//Default mode as access point. Configuration saved in flash.
+//const char string2[] = {"AT+CWMODE_DEF=3\r\n"};
+
+//Default connects to Wifi.
+//const char string[] =
+
+//Default connection mode is 1, multiple connections.
+//const char string[] = { "AT+CIPMUX=1\r\n"};
+
+unsigned int i; 	//Counter
+int index=0;
+int size;
 
 int main(void)
 {
     unsigned int servo_stepval, servo_stepnow;
     unsigned int servo_lut[ SERVO_STEPS+1 ];
     unsigned int j;
-
+    size= sizeof(AP)/sizeof(AP[0]);
     // Calculate the step value and define the current step, defaults to minimum.
     servo_stepval   = ( (SERVO_MAX - SERVO_MIN) / SERVO_STEPS );
     servo_stepnow   = SERVO_MIN;
@@ -46,23 +79,25 @@ int main(void)
     P1SEL   |= BIT6;               // P2.6 = TA1 output
 
     // WiFi Setup
-    DCOCTL = 0; // Select lowest DCOx and MODx settings
-    BCSCTL1 = CALBC1_1MHZ; // Set DCO
+    DCOCTL = 0; 			 // Select lowest DCOx and MODx settings
+    BCSCTL1 = CALBC1_1MHZ;   // Set DCO
     DCOCTL = CALDCO_1MHZ;
-    P2DIR |= 0xFF; // All P2.x outputs
-    P2OUT &= 0x00; // All P2.x reset
-    P1SEL |= RXD + TXD ; // P1.1 = RXD, P1.2=TXD
-    P1SEL2 |= RXD + TXD ; // P1.1 = RXD, P1.2=TXD
+    P2DIR |= 0xFF;			 // All P2.x outputs
+    P2OUT &= 0x00; 			 // All P2.x reset
+    P1SEL |= RXD + TXD ;     // P1.1 = RXD, P1.2=TXD
+    P1SEL2 |= RXD + TXD ;    // P1.1 = RXD, P1.2=TXD
     P1DIR |= TXLED;
     P1OUT &= 0x00;
-    UCA0CTL1 |= UCSSEL_2; // SMCLK
-    UCA0BR0 = 0x08; // 1MHz 115200
-    UCA0BR1 = 0x00; // 1MHz 115200
-    UCA0MCTL = UCBRS2 + UCBRS0; // Modulation UCBRSx = 5
-    UCA0CTL1 &= ~UCSWRST; // **Initialize USCI state machine**
-    UC0IE |= UCA0TXIE+UCA0RXIE;   // Enable USCI_A0 RX interrupt
+    UCA0CTL1 |= UCSSEL_2;        // SMCLK
+    UCA0BR0 = 0x08;              // 1MHz 115200
+    UCA0BR1 = 0x00;              // 1MHz 115200
+    UCA0MCTL = UCBRS2 + UCBRS0;  // Modulation UCBRSx = 5
+    UCA0CTL1 &= ~UCSWRST;        // **Initialize USCI state machine**
+    UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
+    UC0IE &= ~UCA0RXIE;         // Disable RX.
 
-    //__bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
+    //Comment this line out for servo use.
+    __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
 
     while (1) {
         // Move forward toward the maximum step value
@@ -81,21 +116,29 @@ int main(void)
 #pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR(void)
 {
-    P1OUT |= TXLED;
-    UCA0TXBUF = string[i++]; // TX next character
-    if (i == sizeof string - 1) // TX over?
-        UC0IE &= ~UCA0TXIE; // Disable USCI_A0 TX interrupt
+	P1OUT |= TXLED;
+    UCA0TXBUF = AP[index][i++]; // TX next character
+    if (i == strlen(AP[index])+1) // TX over?
+    	{
+    	UC0IE &= ~UCA0TXIE;
+    	UC0IE |= UCA0RXIE;
+    	}
     P1OUT &= ~TXLED; }
 
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
     //P1OUT |= RXLED;
-    if (UCA0RXBUF == '+') // 'a' received?
-    {
-        i = 0;
-        //UC0IE |= UCA0TXIE; // Enable USCI_A0 TX interrupt
-        //UCA0TXBUF = string[i++];
-    }
-    //P1OUT &= ~RXLED;
+	index++;
+	if(index>=size){
+		UC0IE &= ~UCA0TXIE; // Enable USCI_A0 TX interrupt
+	}
+	else
+	{
+		UC0IE |= UCA0TXIE;
+		UC0IE &= ~UCA0RXIE;
+		i=0;
+	}
+	//Toggle LED.
+	//P1OUT &= ~RXLED;
 }
