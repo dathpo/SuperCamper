@@ -6,6 +6,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -48,22 +49,26 @@ public class MainActivity extends AppCompatActivity {
         b1 = findViewById(R.id.button_left);
         b2 = findViewById(R.id.button_right);
 
-        b1.setOnClickListener(new View.OnClickListener() {
+        b1.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View view) {
-                //sends the message to the server
-                while(view.isSelected()==true) {
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction()==MotionEvent.ACTION_DOWN){
                     if (mTcpClient != null) {
                         try {
-                            System.out.println("Left");
-                            mTcpClient.sendMessage("Z");
+                            System.out.println("Right");
+                            mTcpClient.sendMessage("Q");
                         } catch (Exception e) {
                             Log.e("TCP", "exception", e);
                         }
                     }
                 }
+                else if (event.getAction()==MotionEvent.ACTION_UP){
+                    System.out.println("Up");
+                }
+                return true;
             }
         });
+
         b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
