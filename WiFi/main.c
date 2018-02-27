@@ -55,21 +55,23 @@ int index=0;
 int size;
 int flag_left = 0;
 int flag_right = 0;
+int flag_center = 0;
 
 int main(void)
 {
 	unsigned int servo_stepval, servo_stepnow;
 	unsigned int servo_lut[ SERVO_STEPS+1 ];
-	unsigned int j;
+	unsigned int position;
 	size= sizeof(AP)/sizeof(AP[0]);
+
 	// Calculate the step value and define the current step, defaults to minimum.
 	servo_stepval   = ( (SERVO_MAX - SERVO_MIN) / SERVO_STEPS );
 	servo_stepnow   = SERVO_MIN;
 
 	// Fill up the LUT
-	for (j = 0; j < SERVO_STEPS; j++) {
+	for (position = 0; position < SERVO_STEPS; position++) {
 		servo_stepnow += servo_stepval;
-		servo_lut[j] = servo_stepnow;
+		servo_lut[position] = servo_stepnow;
 	}
 
 	// Setup the PWM, etc.
@@ -99,70 +101,90 @@ int main(void)
 	UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
 	UC0IE &= ~UCA0RXIE;         // Disable RX.
 
+	position=95;
+	//position=95;
+
+	//Center is position 95.
+	TACCR1 = servo_lut[position];
+	__delay_cycles(20000);
+
 	//Comment this line out for servo use.
 	__bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
 
+	//Max range is 117 (right side).
+	//Min range is 78. (left side).
 	while (1) {
 		if(flag_right||flag_left){
 			// Move forward toward the maximum step value
-			if(flag_right){
-				for (j = 45; j < 125; j++) {
-					TACCR1 = servo_lut[j];
-					__delay_cycles(20000);
-				}}
-			// Move backward toward the minimum step value
-			if(flag_left){
-				for (j = 125; j > 44; j--) {
-					TACCR1 = servo_lut[j];
-					__delay_cycles(20000);
-				}
+			if(flag_right&&flag_right<117){
+				position=position+5;
+				TACCR1 = servo_lut[position];
+				__delay_cycles(20000);
 			}
-			__bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
+			// Move backward toward the minimum step value
+			if(flag_left&&flag_left>78){
+				position--;
+				TACCR1 = servo_lut[position];
+				__delay_cycles(20000);
+			}
 			UC0IE &= ~UCA0TXIE;
 			//UC0IE |= UCA0RXIE;
 			flag_right = 0;
 			flag_left = 0;
+			__bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
+		}
+		else if(flag_center){
+			position=95;
+			TACCR1 = servo_lut[position];
+			__delay_cycles(20000);
+			flag_center=0;
+			UC0IE &= ~UCA0TXIE;
+			__bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
 		}
 	}
 }
 #pragma vector=USCIAB0TX_VECTOR
-	__interrupt void USCI0TX_ISR(void)
+__interrupt void USCI0TX_ISR(void)
+{
+	P1OUT |= TXLED;
+	UCA0TXBUF = AP[index][i++]; // TX next character
+	if (i == strlen(AP[index])+1) // TX over?
 	{
-		P1OUT |= TXLED;
-		UCA0TXBUF = AP[index][i++]; // TX next character
-		if (i == strlen(AP[index])+1) // TX over?
-		{
-			UC0IE &= ~UCA0TXIE;
-			UC0IE |= UCA0RXIE;
-		}
-		P1OUT &= ~TXLED;
+		UC0IE &= ~UCA0TXIE;
+		UC0IE |= UCA0RXIE;
 	}
+	P1OUT &= ~TXLED;
+}
 
 #pragma vector=USCIAB0RX_VECTOR
-	__interrupt void USCI0RX_ISR(void)
-	{
-		//P1OUT |= RXLED;
-		index++;
+__interrupt void USCI0RX_ISR(void)
+{
+	//P1OUT |= RXLED;
+	index++;
 
-		if(index>=size){
-			UC0IE &= ~UCA0TXIE; // Enable USCI_A0 TX interrupt
-		}
-		else
-		{
-			UC0IE |= UCA0TXIE;
-			UC0IE &= ~UCA0RXIE;
-			i=0;
-		}
-		if(UCA0RXBUF=='Q'){
-			flag_right = 1;
-		}
-		if(UCA0RXBUF=='Z'){
-			flag_left = 1;
-		}
-		if(flag_right||flag_left){
-			__bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
-		}
+	if(index>=size){
+		UC0IE &= ~UCA0TXIE; // Enable USCI_A0 TX interrupt
 	}
-		//Toggle LED.
-		//P1OUT &= ~RXLED;
+	else
+	{
+		UC0IE |= UCA0TXIE;
+		UC0IE &= ~UCA0RXIE;
+		i=0;
+	}
+	if(UCA0RXBUF=='Q'){
+		flag_right = 1;
+	}
+	if(UCA0RXBUF=='Z'){
+		flag_left = 1;
+	}
+	if(UCA0RXBUF=='K')
+	{
+		flag_center = 1;
+	}
+	if(flag_right||flag_left||flag_center){
+		__bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
+	}
+}
+//Toggle LED.
+//P1OUT &= ~RXLED;
 
