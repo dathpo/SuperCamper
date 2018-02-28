@@ -2,6 +2,7 @@ package com.example.isb13180.supercar;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -33,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private String ipAddressOfServerDevice;
 
     Button b1,b2;
+    boolean flag_left,flag_right,flag_center;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,38 +54,40 @@ public class MainActivity extends AppCompatActivity {
         b1.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if(event.getAction()==MotionEvent.ACTION_DOWN){
-                    if (mTcpClient != null) {
-                        try {
-                            System.out.println("Right");
-                            mTcpClient.sendMessage("Q");
-                        } catch (Exception e) {
-                            Log.e("TCP", "exception", e);
-                        }
-                    }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    flag_left = true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    flag_left = false;
                 }
-                else if (event.getAction()==MotionEvent.ACTION_UP){
-                    System.out.println("Up");
-                }
-                return true;
+                return false;
             }
         });
 
-        b2.setOnClickListener(new View.OnClickListener() {
+        b2.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View view) {
-                //sends the message to the server
-                if (mTcpClient != null) {
-                    try {
-                        System.out.println("Right");
-                        mTcpClient.sendMessage("Q");
-                    } catch (Exception e) {
-                        Log.e("TCP", "exception", e);
-                    }
+            public boolean onTouch(View view, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    flag_right = true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    flag_right = false;
                 }
+                return false;
             }
         });
+        handler.post(r);
     }
+
+    Handler handler = new Handler();
+    Runnable r = new Runnable() {
+        @Override
+        public void run() {
+            if(flag_left){System.out.println("Right");}
+            if(flag_right){System.out.println("Left");}
+            handler.postDelayed(r,100);
+        }
+    };
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
