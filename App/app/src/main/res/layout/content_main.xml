@@ -8,67 +8,55 @@
     tools:context="com.example.isb13180.supercar.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/button_up"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@+id/button_up"
-        android:layout_marginEnd="14dp"
-        android:layout_marginRight="14dp"
-        android:layout_marginTop="36dp"
-        android:adjustViewBounds="true"
-        android:maxHeight="200dp"
-        android:maxWidth="200dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/van" />
-
-    <Button
-        android:id="@+id/button_up"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:background="@android:color/background_light"
-        android:drawableTop="@drawable/arrow_up" />
-
-    <Button
-        android:id="@+id/button_right"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/button_up"
-        android:layout_alignBottom="@+id/button_up"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:adjustViewBounds="true"
-        android:background="@drawable/arrow_right"
-        android:maxHeight="10dp"
-        android:maxWidth="10dp" />
-
-    <Button
-        android:id="@+id/button_down"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="false"
-        android:layout_below="@+id/button_right"
-        android:layout_toEndOf="@+id/button_up"
-        android:layout_toRightOf="@+id/button_up"
-        android:adjustViewBounds="true"
-        android:background="@drawable/arrow_down"
-        android:maxHeight="10dp"
-        android:maxWidth="10dp" />
-
-    <Button
-        android:id="@+id/button_left"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+    <ImageButton
+        android:id="@+id/leftArrow"
+        android:layout_width="175dp"
+        android:layout_height="175dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:adjustViewBounds="true"
-        android:background="@drawable/arrow_left"
-        android:maxHeight="10dp"
-        android:maxWidth="10dp" />
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="24dp"
+        android:layout_marginStart="24dp"
+        android:scaleType="fitCenter"
+        android:background="@null"
+        app:srcCompat="@drawable/arrow_left" />
+
+    <ImageButton
+        android:id="@+id/rightArrow"
+        android:layout_width="175dp"
+        android:layout_height="175dp"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/leftArrow"
+        android:layout_toRightOf="@+id/leftArrow"
+        android:scaleType="fitCenter"
+        android:background="@null"
+        app:srcCompat="@drawable/arrow_right" />
+
+    <ImageButton
+        android:id="@+id/downArrow"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_alignLeft="@+id/upArrow"
+        android:layout_alignStart="@+id/upArrow"
+        android:layout_below="@+id/upArrow"
+        android:background="@null"
+        android:scaleType="fitXY"
+        android:scaleX="1.55"
+        android:scaleY="1.55"
+        app:srcCompat="@drawable/arrow_down" />
+
+    <ImageButton
+        android:id="@+id/upArrow"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginTop="17dp"
+        android:background="@null"
+        android:scaleType="fitXY"
+        app:srcCompat="@drawable/arrow_up" />
 
 </RelativeLayout>

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import android.os.AsyncTask;
 
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 
 import retrofit2.Call;
@@ -33,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private ConnectTask connecttask = null;
     private String ipAddressOfServerDevice;
 
-    Button b1,b2;
+    ImageButton b1,b2;
     boolean flag_left,flag_right,flag_center;
 
     @Override
@@ -48,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
         connecttask = new ConnectTask();
         connecttask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
-        b1 = findViewById(R.id.button_left);
-        b2 = findViewById(R.id.button_right);
+        b1 = findViewById(R.id.leftArrow);
+        b2 = findViewById(R.id.rightArrow);
 
         b1.setOnTouchListener(new View.OnTouchListener() {
             @Override
