@@ -1,4 +1,4 @@
-package com.example.isb13180.supercar;
+package com.example.group3.supercamper;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -34,8 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private ConnectTask connecttask = null;
     private String ipAddressOfServerDevice;
 
-    ImageButton b1,b2;
-    boolean flag_left,flag_right,flag_center;
+    ImageButton b1,b2,b3,b4;
+    boolean flag_left,flag_right,flag_down,flag_up,flag_center;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
 
         b1 = findViewById(R.id.leftArrow);
         b2 = findViewById(R.id.rightArrow);
+        b3 = findViewById(R.id.downArrow);
+        b4 = findViewById(R.id.upArrow);
 
         b1.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -75,6 +77,30 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        b3.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    flag_down = true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    flag_down = false;
+                }
+                return false;
+            }
+        });
+
+        b4.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    flag_up = true;
+                } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                    flag_up = false;
+                }
+                return false;
+            }
+        });
         handler.post(r);
     }
 
@@ -82,13 +108,18 @@ public class MainActivity extends AppCompatActivity {
     Runnable r = new Runnable() {
         @Override
         public void run() {
-            if(flag_left){System.out.println("Right");}
-            if(flag_right){System.out.println("Left");}
+            if(flag_left){
+                System.out.println("Left");
+            } else if(flag_right){
+                System.out.println("Right");
+            } else if(flag_down) {
+                System.out.println("Down");
+            } else if(flag_up) {
+                System.out.println("Up");
+            }
             handler.postDelayed(r,100);
         }
     };
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

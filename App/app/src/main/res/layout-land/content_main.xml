@@ -10,26 +10,31 @@
 
     <ImageButton
         android:id="@+id/leftArrow"
-        android:layout_width="175dp"
-        android:layout_height="175dp"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_alignBottom="@+id/downArrow"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:layout_marginLeft="24dp"
-        android:layout_marginStart="24dp"
-        android:scaleType="fitCenter"
+        android:layout_marginBottom="14dp"
+        android:layout_marginLeft="36dp"
+        android:layout_marginStart="36dp"
         android:background="@null"
+        android:scaleType="fitXY"
+        android:scaleX="1.55"
+        android:scaleY="1.55"
         app:srcCompat="@drawable/arrow_left" />
 
     <ImageButton
         android:id="@+id/rightArrow"
-        android:layout_width="175dp"
-        android:layout_height="175dp"
-        android:layout_centerVertical="true"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_alignTop="@+id/leftArrow"
         android:layout_toEndOf="@+id/leftArrow"
         android:layout_toRightOf="@+id/leftArrow"
-        android:scaleType="fitCenter"
         android:background="@null"
+        android:scaleType="fitXY"
+        android:scaleX="1.55"
+        android:scaleY="1.55"
         app:srcCompat="@drawable/arrow_right" />
 
     <ImageButton
@@ -52,11 +57,13 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:layout_marginEnd="24dp"
-        android:layout_marginRight="24dp"
-        android:layout_marginTop="17dp"
+        android:layout_marginEnd="44dp"
+        android:layout_marginRight="44dp"
+        android:layout_marginTop="49dp"
         android:background="@null"
         android:scaleType="fitXY"
+        android:scaleX="1.55"
+        android:scaleY="1.55"
         app:srcCompat="@drawable/arrow_up" />
 
 </RelativeLayout>
