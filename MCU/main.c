@@ -102,7 +102,6 @@ int main(void)
 	UC0IE &= ~UCA0RXIE;         // Disable RX.
 
 	position=95;
-	//position=95;
 
 	//Center is position 95.
 	TACCR1 = servo_lut[position];
