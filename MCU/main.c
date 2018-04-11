@@ -16,6 +16,8 @@
 
 unsigned int PWM_Period     = (MCU_CLOCK / PWM_FREQUENCY);  // PWM Period
 unsigned int PWM_Duty       = 0;                            // %
+unsigned int MOTOR_PWM_Duty = 14000;
+
 
 //Server.
 //const char * Server[]={
@@ -59,6 +61,10 @@ int flag_center = 0;
 
 int main(void)
 {
+    WDTCTL  = WDTPW + WDTHOLD;     // Kill watchdog timer
+
+    __enable_interrupt();
+
 	unsigned int servo_stepval, servo_stepnow;
 	unsigned int servo_lut[ SERVO_STEPS+1 ];
 	unsigned int position;
@@ -75,13 +81,26 @@ int main(void)
 	}
 
 	// Setup the PWM, etc.
-	WDTCTL  = WDTPW + WDTHOLD;     // Kill watchdog timer
 	TACCTL1 = OUTMOD_7;            // TACCR1 reset/set
 	TACTL   = TASSEL_2 + MC_1;     // SMCLK, upmode
 	TACCR0  = PWM_Period-1;        // PWM Period
 	TACCR1  = PWM_Duty;            // TACCR1 PWM Duty Cycle
 	P1DIR   |= BIT6;               // P2.6 = output
 	P1SEL   |= BIT6;               // P2.6 = TA1 output
+
+	// P1.3 Button Interrupt Config
+	P1IE |=  BIT3;                            // P1.3 interrupt enabled
+    P1IES |= BIT3;                            // P1.3 Hi/lo edge
+    P1REN |= BIT3;                            // Enable Pull Up on SW2 (P1.3)
+    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+                                              //BIT3 on Port 1 can be used as Switch
+    // Motor Control Setup
+    TACCTL2 = OUTMOD_7;            // TACCR1 reset/set
+    TACCR2  = MOTOR_PWM_Duty;            // TACCR1 PWM Duty Cycle
+    P1DIR |= BIT4;                            // Set P1.0 to output direction
+    P1SEL |= BIT4;
+
+    P1DIR |= BIT5;
 
 	// WiFi Setup
 	DCOCTL = 0; 			 // Select lowest DCOx and MODx settings
@@ -92,7 +111,7 @@ int main(void)
 	P1SEL |= RXD + TXD ;     // P1.1 = RXD, P1.2=TXD
 	P1SEL2 |= RXD + TXD ;    // P1.1 = RXD, P1.2=TXD
 	P1DIR |= TXLED;
-	P1OUT &= 0x00;
+	//P1OUT &= 0x00;
 	UCA0CTL1 |= UCSSEL_2;        // SMCLK
 	UCA0BR0 = 0x08;              // 1MHz 115200
 	UCA0BR1 = 0x00;              // 1MHz 115200
@@ -142,6 +161,7 @@ int main(void)
 		}
 	}
 }
+
 #pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR(void)
 {
@@ -187,3 +207,10 @@ __interrupt void USCI0RX_ISR(void)
 //Toggle LED.
 //P1OUT &= ~RXLED;
 
+// Port 1 interrupt service routine
+#pragma vector=PORT1_VECTOR
+__interrupt void Port_1(void)
+{
+  P1OUT ^= BIT5;                            // P1.0 = toggle
+  P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+}
