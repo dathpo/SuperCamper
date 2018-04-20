@@ -1884,9 +1884,9 @@ TX OF MSP</text>
 <instance part="J1" gate="G$1" x="205.74" y="30.48"/>
 <instance part="VCC-GND" gate="-1" x="-20.32" y="71.12" rot="R180"/>
 <instance part="VCC-GND" gate="-2" x="-35.56" y="20.32"/>
-<instance part="VREG" gate="-1" x="17.78" y="63.5" rot="R90"/>
+<instance part="VREG" gate="-1" x="17.78" y="53.34" rot="R270"/>
 <instance part="VREG" gate="-2" x="20.32" y="63.5" rot="R90"/>
-<instance part="VREG" gate="-3" x="22.86" y="63.5" rot="R90"/>
+<instance part="VREG" gate="-3" x="22.86" y="53.34" rot="R270"/>
 </instances>
 <busses>
 </busses>
@@ -1970,7 +1970,6 @@ TX OF MSP</text>
 <wire x1="40.64" y1="129.54" x2="17.78" y2="129.54" width="0.1524" layer="91"/>
 <wire x1="17.78" y1="129.54" x2="17.78" y2="93.98" width="0.1524" layer="91"/>
 <wire x1="17.78" y1="93.98" x2="48.26" y2="93.98" width="0.1524" layer="91"/>
-<wire x1="22.86" y1="60.96" x2="35.56" y2="60.96" width="0.1524" layer="91"/>
 <wire x1="35.56" y1="60.96" x2="48.26" y2="60.96" width="0.1524" layer="91"/>
 <wire x1="48.26" y1="60.96" x2="53.34" y2="60.96" width="0.1524" layer="91"/>
 <wire x1="53.34" y1="60.96" x2="53.34" y2="45.72" width="0.1524" layer="91"/>
@@ -1998,16 +1997,17 @@ TX OF MSP</text>
 <pinref part="J1" gate="G$1" pin="1"/>
 <pinref part="C2" gate="G$1" pin="2"/>
 <wire x1="35.56" y1="45.72" x2="35.56" y2="60.96" width="0.1524" layer="91"/>
+<pinref part="VREG" gate="-2" pin="S"/>
+<wire x1="20.32" y1="60.96" x2="35.56" y2="60.96" width="0.1524" layer="91"/>
 <junction x="35.56" y="60.96"/>
-<pinref part="VREG" gate="-3" pin="S"/>
 </segment>
 </net>
 <net name="N$12" class="0">
 <segment>
 <wire x1="-38.1" y1="27.94" x2="-17.78" y2="27.94" width="0.1524" layer="91"/>
 <wire x1="-17.78" y1="27.94" x2="0" y2="27.94" width="0.1524" layer="91"/>
-<wire x1="0" y1="27.94" x2="20.32" y2="27.94" width="0.1524" layer="91"/>
-<wire x1="20.32" y1="27.94" x2="35.56" y2="27.94" width="0.1524" layer="91"/>
+<wire x1="0" y1="27.94" x2="15.24" y2="27.94" width="0.1524" layer="91"/>
+<wire x1="15.24" y1="27.94" x2="35.56" y2="27.94" width="0.1524" layer="91"/>
 <wire x1="35.56" y1="27.94" x2="53.34" y2="27.94" width="0.1524" layer="91"/>
 <wire x1="53.34" y1="27.94" x2="53.34" y2="12.7" width="0.1524" layer="91"/>
 <wire x1="53.34" y1="12.7" x2="81.28" y2="12.7" width="0.1524" layer="91"/>
@@ -2047,9 +2047,10 @@ TX OF MSP</text>
 <pinref part="C1" gate="G$1" pin="1"/>
 <wire x1="0" y1="40.64" x2="0" y2="27.94" width="0.1524" layer="91"/>
 <junction x="0" y="27.94"/>
-<wire x1="20.32" y1="60.96" x2="20.32" y2="27.94" width="0.1524" layer="91"/>
-<junction x="20.32" y="27.94"/>
-<pinref part="VREG" gate="-2" pin="S"/>
+<pinref part="VREG" gate="-1" pin="S"/>
+<wire x1="17.78" y1="55.88" x2="15.24" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="15.24" y1="55.88" x2="15.24" y2="27.94" width="0.1524" layer="91"/>
+<junction x="15.24" y="27.94"/>
 </segment>
 </net>
 <net name="N$14" class="0">
@@ -2057,7 +2058,6 @@ TX OF MSP</text>
 <wire x1="50.8" y1="83.82" x2="-17.78" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="-17.78" y1="60.96" x2="-17.78" y2="71.12" width="0.1524" layer="91"/>
 <wire x1="-17.78" y1="71.12" x2="-17.78" y2="83.82" width="0.1524" layer="91"/>
-<wire x1="17.78" y1="60.96" x2="0" y2="60.96" width="0.1524" layer="91"/>
 <pinref part="H-BRIDGE" gate="A" pin="4"/>
 <wire x1="0" y1="60.96" x2="-17.78" y2="60.96" width="0.1524" layer="91"/>
 <wire x1="106.68" y1="33.02" x2="106.68" y2="68.58" width="0.1524" layer="91"/>
@@ -2066,9 +2066,12 @@ TX OF MSP</text>
 <pinref part="VCC-GND" gate="-1" pin="S"/>
 <junction x="-17.78" y="71.12"/>
 <pinref part="C1" gate="G$1" pin="2"/>
-<wire x1="0" y1="48.26" x2="0" y2="60.96" width="0.1524" layer="91"/>
-<junction x="0" y="60.96"/>
-<pinref part="VREG" gate="-1" pin="S"/>
+<wire x1="0" y1="48.26" x2="0" y2="58.42" width="0.1524" layer="91"/>
+<pinref part="VREG" gate="-3" pin="S"/>
+<wire x1="0" y1="58.42" x2="0" y2="60.96" width="0.1524" layer="91"/>
+<wire x1="22.86" y1="55.88" x2="22.86" y2="58.42" width="0.1524" layer="91"/>
+<wire x1="22.86" y1="58.42" x2="0" y2="58.42" width="0.1524" layer="91"/>
+<junction x="0" y="58.42"/>
 </segment>
 </net>
 </nets>
