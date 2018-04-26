@@ -32,7 +32,7 @@ const char * AP[]={
 		//"Z\r\n",
 		"AT+RST\r\n",
 		"AT+CWMODE=3\r\n",
-		"AT+CWSAP=\"Test1\",\"password\",3,0\r\n",
+		"AT+CWSAP=\"Test\",\"password\",3,0\r\n",
 		"AT+CIFSR\r\n",
 		"AT+CIPMUX=1\r\n",
 		"AT+CIPSERVER=1,100\r\n",
@@ -118,7 +118,7 @@ int main(void)
 	UCA0MCTL = UCBRS2 + UCBRS0;  // Modulation UCBRSx = 5
 	UCA0CTL1 &= ~UCSWRST;        // **Initialize USCI state machine**
 	UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
-	//UC0IE |= UCA0RXIE;         // Disable RX.
+	//UC0IE &= ~UCA0RXIE;         // Disable RX.
 
 	position=95;
 
@@ -126,8 +126,7 @@ int main(void)
 	TACCR1 = servo_lut[position];
 	__delay_cycles(20000);
 
-	//Comment this line out for servo use.
-	//__bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
+	__bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
 
 	//Max range is 117 (right side).
 	//Min range is 78. (left side).
@@ -166,11 +165,16 @@ int main(void)
 __interrupt void USCI0TX_ISR(void)
 {
 	P1OUT |= TXLED;
-	UCA0TXBUF = AP[index][i++]; // TX next character
-	if (i == strlen(AP[index])+1) // TX over?
-	{
-		UC0IE &= ~UCA0TXIE;
-		UC0IE |= UCA0RXIE;
+	if (index>=size){       //if whole message has been sent
+	    UC0IE |= UCA0RXIE; //Enable receiver interrupts
+	    UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
+	}
+	else{
+	    UCA0TXBUF = AP[index][i++]; // TX next character
+	    if (i == strlen(AP[index])+1){ // TX over?
+	        index++;
+	        i=0;
+	    }
 	}
 	P1OUT &= ~TXLED;
 }
@@ -182,7 +186,7 @@ __interrupt void USCI0RX_ISR(void)
 	index++;
 
 	if(index>=size){
-		UC0IE &= ~UCA0TXIE; // Enable USCI_A0 TX interrupt
+		UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
 	}
 	else
 	{
