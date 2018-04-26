@@ -211,6 +211,12 @@ __interrupt void USCI0RX_ISR(void)
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
+  //turn the engine on and off
+  P1SEL ^= BIT4;
+  P1OUT ^= BIT4;
+
+  //toggle direction
   P1OUT ^= BIT5;                            // P1.0 = toggle
+
   P1IFG &= ~BIT3;                           // P1.3 IFG cleared
 }
