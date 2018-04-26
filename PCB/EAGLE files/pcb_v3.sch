@@ -1839,6 +1839,7 @@ Created 2014-05-29, Karrer Zheng&lt;br&gt;
 <part name="J1" library="Board-to-Board (rev17e)" deviceset="61300821121" device=""/>
 <part name="VCC-GND" library="con-molex" deviceset="22-23-2021" device=""/>
 <part name="VREG" library="con-molex" deviceset="22-23-2031" device="" value="3.3V"/>
+<part name="J2" library="Board-to-Board (rev17e)" deviceset="61300821121" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -1887,6 +1888,7 @@ TX OF MSP</text>
 <instance part="VREG" gate="-1" x="17.78" y="53.34" rot="R270"/>
 <instance part="VREG" gate="-2" x="20.32" y="63.5" rot="R90"/>
 <instance part="VREG" gate="-3" x="22.86" y="53.34" rot="R270"/>
+<instance part="J2" gate="G$1" x="200.66" y="53.34"/>
 </instances>
 <busses>
 </busses>
@@ -2000,6 +2002,13 @@ TX OF MSP</text>
 <pinref part="VREG" gate="-2" pin="S"/>
 <wire x1="20.32" y1="60.96" x2="35.56" y2="60.96" width="0.1524" layer="91"/>
 <junction x="35.56" y="60.96"/>
+<pinref part="J2" gate="G$1" pin="1"/>
+<wire x1="193.04" y1="55.88" x2="190.5" y2="55.88" width="0.1524" layer="91"/>
+<wire x1="190.5" y1="55.88" x2="190.5" y2="50.8" width="0.1524" layer="91"/>
+<pinref part="J2" gate="G$1" pin="3"/>
+<wire x1="190.5" y1="50.8" x2="190.5" y2="33.02" width="0.1524" layer="91"/>
+<wire x1="193.04" y1="50.8" x2="190.5" y2="50.8" width="0.1524" layer="91"/>
+<junction x="190.5" y="50.8"/>
 </segment>
 </net>
 <net name="N$12" class="0">
@@ -2051,6 +2060,10 @@ TX OF MSP</text>
 <wire x1="17.78" y1="55.88" x2="15.24" y2="55.88" width="0.1524" layer="91"/>
 <wire x1="15.24" y1="55.88" x2="15.24" y2="27.94" width="0.1524" layer="91"/>
 <junction x="15.24" y="27.94"/>
+<pinref part="J2" gate="G$1" pin="5"/>
+<wire x1="208.28" y1="48.26" x2="215.9" y2="48.26" width="0.1524" layer="91"/>
+<wire x1="215.9" y1="48.26" x2="215.9" y2="25.4" width="0.1524" layer="91"/>
+<junction x="215.9" y="25.4"/>
 </segment>
 </net>
 <net name="N$14" class="0">
