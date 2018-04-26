@@ -32,7 +32,7 @@ const char * AP[]={
 		//"Z\r\n",
 		"AT+RST\r\n",
 		"AT+CWMODE=3\r\n",
-		"AT+CWSAP=\"Test\",\"password\",3,0\r\n",
+		"AT+CWSAP_DEF=\"Ciao2\",\"Ciao1234567\",3,3\r\n",
 		"AT+CIFSR\r\n",
 		"AT+CIPMUX=1\r\n",
 		"AT+CIPSERVER=1,100\r\n",
@@ -120,6 +120,10 @@ int main(void)
 	UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
 	//UC0IE &= ~UCA0RXIE;         // Disable RX.
 
+	// Transmission Timer Setup
+	TA1CTL = TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
+	TA1CCR0 = 2048;               // 2 Hz
+
 	position=95;
 
 	//Center is position 95.
@@ -169,15 +173,26 @@ __interrupt void USCI0TX_ISR(void)
 	    UC0IE |= UCA0RXIE; //Enable receiver interrupts
 	    UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
 	}
-	else{
-	    UCA0TXBUF = AP[index][i++]; // TX next character
-	    if (i == strlen(AP[index])+1){ // TX over?
-	        index++;
+	else{       //more commands to send
+	    UCA0TXBUF = AP[index][i++]; // iterate next character
+	    if (i == strlen(AP[index])+1){ // message is over
+	        index++;    //go to next message
 	        i=0;
+	        UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
+	        TA1CCTL0 = CCIE;              // Timer 1 Capture/compare interrupt enable
 	    }
 	}
 	P1OUT &= ~TXLED;
 }
+
+
+#pragma vector=TIMER1_A0_VECTOR
+__interrupt void timer(void)
+{
+        UC0IE |= UCA0TXIE;          // Enable transmitter interrupts
+        TA1CCTL0 &= ~CCIE;            // Timer 1 Capture/compare interrupt disable
+}
+
 
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
