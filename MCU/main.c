@@ -118,11 +118,11 @@ int main(void)
 	UCA0MCTL = UCBRS2 + UCBRS0;  // Modulation UCBRSx = 5
 	UCA0CTL1 &= ~UCSWRST;        // **Initialize USCI state machine**
 	UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
-	//UC0IE &= ~UCA0RXIE;         // Disable RX.
+	UC0IE &= ~UCA0RXIE;         // Disable RX.
 
 	// Transmission Timer Setup
-	TA1CTL = TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
-	TA1CCR0 = 2048;               // 2 Hz
+	TA1CTL = TASSEL_2 + MC_2 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
+	TA1CCR0 = 16384;
 
 	position=95;
 
@@ -170,6 +170,7 @@ __interrupt void USCI0TX_ISR(void)
 {
 	P1OUT |= TXLED;
 	if (index>=size){       //if whole message has been sent
+	    P1OUT &= ~TXLED;
 	    UC0IE |= UCA0RXIE; //Enable receiver interrupts
 	    UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
 	}
@@ -182,7 +183,6 @@ __interrupt void USCI0TX_ISR(void)
 	        TA1CCTL0 = CCIE;              // Timer 1 Capture/compare interrupt enable
 	    }
 	}
-	P1OUT &= ~TXLED;
 }
 
 
@@ -190,29 +190,18 @@ __interrupt void USCI0TX_ISR(void)
 __interrupt void timer(void)
 {
         UC0IE |= UCA0TXIE;          // Enable transmitter interrupts
-        TA1CCTL0 &= ~CCIE;            // Timer 1 Capture/compare interrupt disable
+        TA1CCTL0 &= ~CCIE;            // Timer 1 interrupt disable
+        TA1CCR0 = 16384;
 }
 
 
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
-	//P1OUT |= RXLED;
-	index++;
-
-	if(index>=size){
-		UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
-	}
-	else
-	{
-		UC0IE |= UCA0TXIE;
-		UC0IE &= ~UCA0RXIE;
-		i=0;
-	}
-	if(UCA0RXBUF=='Q'){
+	if(UCA0RXBUF=='R'){
 		flag_right = 1;
 	}
-	if(UCA0RXBUF=='Z'){
+	if(UCA0RXBUF=='L'){
 		flag_left = 1;
 	}
 	if(UCA0RXBUF=='K')
@@ -222,9 +211,9 @@ __interrupt void USCI0RX_ISR(void)
 	if(flag_right||flag_left||flag_center){
 		__bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
 	}
+
 }
-//Toggle LED.
-//P1OUT &= ~RXLED;
+
 
 // Port 1 interrupt service routine
 #pragma vector=PORT1_VECTOR
