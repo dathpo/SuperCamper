@@ -110,12 +110,16 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if(flag_left){
                 System.out.println("Left");
+                mTcpClient.sendMessage("Left");
             } else if(flag_right){
                 System.out.println("Right");
+                mTcpClient.sendMessage("Right");
             } else if(flag_down) {
                 System.out.println("Down");
+                mTcpClient.sendMessage("Down");
             } else if(flag_up) {
                 System.out.println("Up");
+                mTcpClient.sendMessage("Up");
             }
             handler.postDelayed(r,100);
         }
