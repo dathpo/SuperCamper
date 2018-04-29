@@ -7,6 +7,8 @@
 #define RXD BIT1
 #define TXD BIT2
 
+#define TX_CLOCK 2048
+
 #define MCU_CLOCK           1000000
 #define PWM_FREQUENCY       46      // In Hertz, ideally 50Hz.
 
@@ -32,7 +34,7 @@ const char * AP[]={
 		//"Z\r\n",
 		"AT+RST\r\n",
 		"AT+CWMODE=3\r\n",
-		"AT+CWSAP_DEF=\"Ciao2\",\"Ciao1234567\",3,3\r\n",
+		"AT+CWSAP_DEF=\"Ciao\",\"Ciao1234567\",3,3\r\n",
 		"AT+CIFSR\r\n",
 		"AT+CIPMUX=1\r\n",
 		"AT+CIPSERVER=1,100\r\n",
@@ -69,6 +71,7 @@ int main(void)
 	unsigned int servo_lut[ SERVO_STEPS+1 ];
 	unsigned int position;
 	size= sizeof(AP)/sizeof(AP[0]);
+	BCSCTL3 |= LFXT1S_2;
 
 	// Calculate the step value and define the current step, defaults to minimum.
 	servo_stepval   = ( (SERVO_MAX - SERVO_MIN) / SERVO_STEPS );
@@ -111,6 +114,9 @@ int main(void)
 	P1SEL |= RXD + TXD ;     // P1.1 = RXD, P1.2=TXD
 	P1SEL2 |= RXD + TXD ;    // P1.1 = RXD, P1.2=TXD
 	P1DIR |= TXLED;
+	P1OUT &= ~TXLED;
+
+
 	//P1OUT &= 0x00;
 	UCA0CTL1 |= UCSSEL_2;        // SMCLK
 	UCA0BR0 = 0x08;              // 1MHz 115200
@@ -120,12 +126,15 @@ int main(void)
 	UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
 	UC0IE &= ~UCA0RXIE;         // Disable RX.
 
-	// Transmission Timer Setup
-	TA1CTL = TASSEL_2 + MC_2 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
-	TA1CCR0 = 16384;
+
 
 	position=95;
 
+	__delay_cycles(200000);
+	// Transmission Timer Setup
+	    TA1CCTL0=CCIE;  //Interrupt Enable
+	    TA1CTL = TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
+	    TA1CCR0 = TX_CLOCK;
 	//Center is position 95.
 	TACCR1 = servo_lut[position];
 	__delay_cycles(20000);
@@ -168,7 +177,8 @@ int main(void)
 #pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR(void)
 {
-	P1OUT |= TXLED;
+
+    //P1OUT |= TXLED;
 	if (index>=size){       //if whole message has been sent
 	    P1OUT &= ~TXLED;
 	    UC0IE |= UCA0RXIE; //Enable receiver interrupts
@@ -180,7 +190,7 @@ __interrupt void USCI0TX_ISR(void)
 	        index++;    //go to next message
 	        i=0;
 	        UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
-	        TA1CCTL0 = CCIE;              // Timer 1 Capture/compare interrupt enable
+	        TA1CCTL0 = CCIE;              // Timer 1 interrupt enable
 	    }
 	}
 }
@@ -189,9 +199,10 @@ __interrupt void USCI0TX_ISR(void)
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void timer(void)
 {
+        P1OUT |= TXLED;
         UC0IE |= UCA0TXIE;          // Enable transmitter interrupts
         TA1CCTL0 &= ~CCIE;            // Timer 1 interrupt disable
-        TA1CCR0 = 16384;
+        //TA1CCR0 = TX_CLOCK;
 }
 
 
