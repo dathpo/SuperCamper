@@ -139,6 +139,11 @@ int main(void)
 	TA1CCR1 |= 256;	// 0.125s
 
 
+	__delay_cycles(200000);
+	// Transmission Timer Setup
+	    TA1CCTL0=CCIE;  //Interrupt Enable
+	    TA1CTL = TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
+	    TA1CCR0 = TX_CLOCK;
 	//Center is position 95.
 	TACCR1 = servo_lut[position];
 	__delay_cycles(20000);
