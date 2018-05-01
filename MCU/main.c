@@ -7,6 +7,8 @@
 #define RXD BIT1
 #define TXD BIT2
 
+#define TX_CLOCK 4096
+
 #define MCU_CLOCK           1000000
 #define PWM_FREQUENCY       46      // In Hertz, ideally 50Hz.
 
@@ -197,6 +199,22 @@ __interrupt void USCI0TX_ISR(void)
     P1OUT &= ~TXLED;
 } */
 
+
+#pragma vector=TIMER1_A0_VECTOR
+__interrupt void timer(void)
+{
+        TA1CCTL0 &= ~CCIE;            // Timer 1 interrupt disable
+        P1OUT |= TXLED;
+        UC0IE |= UCA0TXIE;          // Enable transmitter interrupts
+}
+
+#pragma vector=TIMER1_A1_VECTOR
+__interrupt void timerServo(void)
+{
+        TA1CCTL1 &= ~CCIE;            // Timer 1 interrupt disable
+}
+
+
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
@@ -227,8 +245,7 @@ __interrupt void USCI0RX_ISR(void)
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 }
-//Toggle LED.
-//P1OUT &= ~RXLED;
+
 
 // Port 1 interrupt service routine
 #pragma vector=PORT1_VECTOR
