@@ -7,6 +7,8 @@
 #define RXD BIT1
 #define TXD BIT2
 
+#define TX_CLOCK 4096
+
 #define MCU_CLOCK           1000000
 #define PWM_FREQUENCY       46      // In Hertz, ideally 50Hz.
 
@@ -32,8 +34,8 @@ const char * AP[]={
 		//"Z\r\n",
 		"AT+RST\r\n",
 		"AT+CWMODE=3\r\n",
-		"AT+CWSAP_DEF=\"Ciao2\",\"Ciao1234567\",3,3\r\n",
-		"AT+CIFSR\r\n",
+		"AT+CWSAP_DEF=\"Ciao\",\"Ciao1234567\",3,3\r\n",
+		//"AT+CIFSR\r\n",
 		"AT+CIPMUX=1\r\n",
 		"AT+CIPSERVER=1,100\r\n",
 		"AT+SLEEP=0\r\n",
@@ -69,6 +71,7 @@ int main(void)
 	unsigned int servo_lut[ SERVO_STEPS+1 ];
 	unsigned int position;
 	size= sizeof(AP)/sizeof(AP[0]);
+	BCSCTL3 |= LFXT1S_2;    //initialise clock registers
 
 	// Calculate the step value and define the current step, defaults to minimum.
 	servo_stepval   = ( (SERVO_MAX - SERVO_MIN) / SERVO_STEPS );
@@ -88,12 +91,12 @@ int main(void)
 	P1DIR   |= BIT6;               // P2.6 = output
 	P1SEL   |= BIT6;               // P2.6 = TA1 output
 
-	// P1.3 Button Interrupt Config
-	P1IE |=  BIT3;                            // P1.3 interrupt enabled
-    P1IES |= BIT3;                            // P1.3 Hi/lo edge
-    P1REN |= BIT3;                            // Enable Pull Up on SW2 (P1.3)
-    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
-                                              //BIT3 on Port 1 can be used as Switch
+//	// P1.3 Button Interrupt Config
+//	P1IE |=  BIT3;                            // P1.3 interrupt enabled
+//    P1IES |= BIT3;                            // P1.3 Hi/lo edge
+//    P1REN |= BIT3;                            // Enable Pull Up on SW2 (P1.3)
+//    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+//                                              //BIT3 on Port 1 can be used as Switch
     // Motor Control Setup
     TACCTL2 = OUTMOD_7;            // TACCR1 reset/set
     TACCR2  = MOTOR_PWM_Duty;            // TACCR1 PWM Duty Cycle
@@ -111,6 +114,9 @@ int main(void)
 	P1SEL |= RXD + TXD ;     // P1.1 = RXD, P1.2=TXD
 	P1SEL2 |= RXD + TXD ;    // P1.1 = RXD, P1.2=TXD
 	P1DIR |= TXLED;
+	P1OUT &= ~TXLED;
+
+
 	//P1OUT &= 0x00;
 	UCA0CTL1 |= UCSSEL_2;        // SMCLK
 	UCA0BR0 = 0x08;              // 1MHz 115200
@@ -118,13 +124,20 @@ int main(void)
 	UCA0MCTL = UCBRS2 + UCBRS0;  // Modulation UCBRSx = 5
 	UCA0CTL1 &= ~UCSWRST;        // **Initialize USCI state machine**
 	UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
-	//UC0IE &= ~UCA0RXIE;         // Disable RX.
-
-	// Transmission Timer Setup
-	TA1CTL = TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
-	TA1CCR0 = 2048;               // 2 Hz
+	UC0IE &= ~UCA0RXIE;         // Disable RX.
 
 	position=95;
+
+	// Transmission Timer Setup
+	TA1CCTL0 |= CCIE;  //Interrupt Enable
+	TA1CTL |= TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
+	TA1CCR0 = TX_CLOCK;
+
+
+	// Transmission Timer Setup
+	TA1CCTL1 &= ~CCIE;  //Interrupt Disabe - only to be used as a delay to servo rotation
+	TA1CCR1 |= 256;	// 0.125s
+
 
 	//Center is position 95.
 	TACCR1 = servo_lut[position];
@@ -136,17 +149,17 @@ int main(void)
 	//Min range is 78. (left side).
 	while (1) {
 		if(flag_right||flag_left){
-			// Move forward toward the maximum step value
-			if(flag_right&&flag_right<117){
-				position=position+5;
+			// Move right toward the maximum step value
+			if(flag_right&&position<117){
+				position=position+3;
 				TACCR1 = servo_lut[position];
-				__delay_cycles(20000);
+				TA1CCTL1 |= CCIE;
 			}
-			// Move backward toward the minimum step value
-			if(flag_left&&flag_left>78){
-				position--;
+			// Move left toward the minimum step value
+			if(flag_left&&position>50){
+				position=position-3;
 				TACCR1 = servo_lut[position];
-				__delay_cycles(20000);
+				TA1CCTL1 |= CCIE;
 			}
 			UC0IE &= ~UCA0TXIE;
 			UC0IE |= UCA0RXIE;
@@ -157,7 +170,7 @@ int main(void)
 		else if(flag_center){
 			position=95;
 			TACCR1 = servo_lut[position];
-			__delay_cycles(20000);
+			TA1CCTL1 |= CCIE;
 			flag_center=0;
 			UC0IE &= ~UCA0TXIE;
 			__bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
@@ -168,10 +181,12 @@ int main(void)
 #pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR(void)
 {
-	P1OUT |= TXLED;
+
+    //P1OUT |= TXLED;
 	if (index>=size){       //if whole message has been sent
-	    UC0IE |= UCA0RXIE; //Enable receiver interrupts
+	    P1OUT &= ~TXLED;    //Turn off transmitter LED
 	    UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
+	    UC0IE |= UCA0RXIE; //Enable receiver interrupts
 	}
 	else{       //more commands to send
 	    UCA0TXBUF = AP[index][i++]; // iterate next character
@@ -179,52 +194,54 @@ __interrupt void USCI0TX_ISR(void)
 	        index++;    //go to next message
 	        i=0;
 	        UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
-	        TA1CCTL0 = CCIE;              // Timer 1 Capture/compare interrupt enable
+	        TA1CCTL0 = CCIE;              // Timer 1 interrupt enable
 	    }
 	}
-	P1OUT &= ~TXLED;
 }
 
 
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void timer(void)
 {
+        TA1CCTL0 &= ~CCIE;            // Timer 1 interrupt disable
+        P1OUT |= TXLED;
         UC0IE |= UCA0TXIE;          // Enable transmitter interrupts
-        TA1CCTL0 &= ~CCIE;            // Timer 1 Capture/compare interrupt disable
+}
+
+#pragma vector=TIMER1_A1_VECTOR
+__interrupt void timerServo(void)
+{
+        TA1CCTL1 &= ~CCIE;            // Timer 1 interrupt disable
 }
 
 
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
-	//P1OUT |= RXLED;
-	index++;
-
-	if(index>=size){
-		UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
-	}
-	else
-	{
-		UC0IE |= UCA0TXIE;
-		UC0IE &= ~UCA0RXIE;
-		i=0;
-	}
-	if(UCA0RXBUF=='Q'){
+	if(UCA0RXBUF=='R'){
 		flag_right = 1;
+		flag_left = 0;
+		flag_center = 0;
 	}
-	if(UCA0RXBUF=='Z'){
+	else if(UCA0RXBUF=='L'){
+		flag_right = 0;
 		flag_left = 1;
+		flag_center = 0;
 	}
-	if(UCA0RXBUF=='K')
+	else if(UCA0RXBUF=='U')
 	{
-		flag_center = 1;
+		P1OUT |= BIT5;
 	}
+	else if(UCA0RXBUF=='D')
+		{
+			P1OUT &= ~BIT5;
+		}
 	if(flag_right||flag_left||flag_center){
 		__bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
 	}
+
 }
-//Toggle LED.
-//P1OUT &= ~RXLED;
+
 
 // Port 1 interrupt service routine
 #pragma vector=PORT1_VECTOR

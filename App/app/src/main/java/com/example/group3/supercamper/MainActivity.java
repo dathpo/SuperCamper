@@ -110,18 +110,18 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if(flag_left){
                 System.out.println("Left");
-                mTcpClient.sendMessage("Left");
+                mTcpClient.sendMessage("L");
             } else if(flag_right){
                 System.out.println("Right");
-                mTcpClient.sendMessage("Right");
+                mTcpClient.sendMessage("R");
             } else if(flag_down) {
-                System.out.println("Down");
-                mTcpClient.sendMessage("Down");
+                System.out.println("Reverse");
+                mTcpClient.sendMessage("D");
             } else if(flag_up) {
-                System.out.println("Up");
-                mTcpClient.sendMessage("Up");
+                System.out.println("Forward");
+                mTcpClient.sendMessage("U");
             }
-            handler.postDelayed(r,100);
+            handler.postDelayed(r,50);
         }
     };
 
