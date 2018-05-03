@@ -54,7 +54,8 @@ int flag_right = 0;
 int flag_center = 0;
 int flag_on = 0;
 int flag_off = 0;
-
+int flag_forwards = 0;
+int flag_backwards = 0;
 int main(void)
 {
     WDTCTL  = WDTPW + WDTHOLD;     // Kill watchdog timer
@@ -145,6 +146,16 @@ int main(void)
     //Max range is 117 (right side).
     //Min range is 78. (left side).
     while (1) {
+        if(flag_forwards){
+            P1OUT |= BIT5;
+            MOTOR_PWM_Duty = 14000;
+            flag_forwards = 0;
+        }
+        if(flag_backwards){
+            P1OUT &= ~BIT5;
+            MOTOR_PWM_Duty = 0;
+            flag_backwards = 0;
+        }
         if(flag_on){
                     P1SEL |= BIT4;
                     P1OUT |= BIT4;
@@ -154,6 +165,7 @@ int main(void)
                 P1SEL &= ~BIT4;
                 P1OUT &= ~BIT4;
                 flag_off=0;
+
             }
         if(flag_right||flag_left){
             // Move right toward the maximum step value
@@ -246,11 +258,11 @@ __interrupt void USCI0RX_ISR(void)
     }
     else if(UCA0RXBUF=='U')
     {
-        P1OUT |= BIT5;
+        flag_forwards = 1;
     }
     else if(UCA0RXBUF=='D')
     {
-        P1OUT &= ~BIT5;
+        flag_backwards = 1;
     }
     if(flag_right||flag_left||flag_center){
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
