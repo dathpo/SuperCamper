@@ -34,11 +34,11 @@ const char * AP[]={
 		//"Z\r\n",
 		"AT+RST\r\n",
 		"AT+CWMODE=3\r\n",
-		"AT+CWSAP=\"Ciao\",\"Ciao1234567\",3,3\r\n",
+		"AT+CWSAP_DEF=\"Ciao\",\"Ciao1234567\",3,3\r\n",
 		//"AT+CIFSR\r\n",
 		"AT+CIPMUX=1\r\n",
 		"AT+CIPSERVER=1,100\r\n",
-		//"AT+SLEEP=0\r\n",
+		"AT+SLEEP=0\r\n",
 };
 
 
@@ -60,8 +60,7 @@ int size;
 int flag_left = 0;
 int flag_right = 0;
 int flag_center = 0;
-int flag_on = 0;
-int flag_off = 0;
+
 int main(void)
 {
     WDTCTL  = WDTPW + WDTHOLD;     // Kill watchdog timer
@@ -96,8 +95,8 @@ int main(void)
     TACCTL2 = OUTMOD_7;            // TACCR1 reset/set
     TACCR2  = MOTOR_PWM_Duty;            // TACCR1 PWM Duty Cycle
     P1DIR |= BIT4;                            // Set P1.0 to output direction
-    P1SEL &= ~BIT4;
-	P1OUT &= ~BIT4;
+    P1SEL |= BIT4;
+
     P1DIR |= BIT5;
 
 	// WiFi Setup
@@ -146,18 +145,6 @@ int main(void)
 	//Max range is 117 (right side).
 	//Min range is 78. (left side).
 	while (1) {
-		if(flag_on)
-		{
-			P1SEL |= BIT4;
-		    P1OUT |= BIT4;
-		    flag_on=0;
-		}
-		else if(flag_off)
-		{
-			P1SEL &= ~BIT4;
-			P1OUT &= ~BIT4;
-			flag_off=0;
-		}
 		if(flag_right||flag_left){
 			// Move right toward the maximum step value
 			if(flag_right&&position<117){
@@ -197,7 +184,6 @@ __interrupt void USCI0TX_ISR(void)
 	    P1OUT &= ~TXLED;    //Turn off transmitter LED
 	    UC0IE &= ~UCA0TXIE; //Disable transmitter interrupts
 	    UC0IE |= UCA0RXIE;  //Enable receiver interrupts
-
 	}
 	else{       //more commands to send
 	    UCA0TXBUF = AP[index][i++]; // iterate next character
@@ -230,19 +216,17 @@ __interrupt void USCI0RX_ISR(void)
 {
 	//On.
 	if(UCA0RXBUF=='N'){
-	    flag_on = 1;
-	    flag_off = 0;
+		P1SEL |= BIT4;
+	    P1OUT |= BIT4;
 	}
 	//Off.
-	else if(UCA0RXBUF=='F'){
-		//P1SEL &= ~BIT4;
-		//P1OUT &= ~BIT4;
-		flag_on = 0;
-		flag_off = 1;
+	if(UCA0RXBUF=='F'){
+		P1SEL &= ~BIT4;
+		P1OUT &= ~BIT4;
 	}
 
 	//Right-left-center.
-	else if(UCA0RXBUF=='R'){
+	if(UCA0RXBUF=='R'){
 		flag_right = 1;
 		flag_left = 0;
 		flag_center = 0;
@@ -270,3 +254,4 @@ __interrupt void USCI0RX_ISR(void)
 		__bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
 	}
 }
+
