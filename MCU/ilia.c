@@ -30,7 +30,7 @@ const char * AP[]={
         //"AT+CIFSR\r\n",
         "AT+CIPMUX=1\r\n",
         "AT+CIPSERVER=1,100\r\n",
-        //"AT+SLEEP=0\r\n",
+        "AT+SLEEP=0\r\n",
 };
 
 
@@ -96,8 +96,8 @@ int main(void)
     TACCTL2 = OUTMOD_7;            // TACCR1 reset/set
     TACCR2  = MOTOR_PWM_Duty;            // TACCR1 PWM Duty Cycle
     P1DIR |= BIT4;                            // Set P1.0 to output direction
-    P1SEL |= BIT4;
-
+    P1SEL &= ~BIT4;
+    P1OUT &= ~BIT4;
     P1DIR |= BIT5;
 
     // WiFi Setup
@@ -128,11 +128,11 @@ int main(void)
     TA1CTL |= TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
     TA1CCR0 = TX_CLOCK;
 
-
     // Transmission Timer Setup
     TA1CCTL1 &= ~CCIE;  //Interrupt Disabe - only to be used as a delay to servo rotation
     TA1CCR1 |= 256; // 0.125s
 
+    __delay_cycles(200000);
     // Transmission Timer Setup
     TA1CCTL0=CCIE;  //Interrupt Enable
     TA1CTL = TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
@@ -148,25 +148,24 @@ int main(void)
     while (1) {
         if(flag_forwards){
             P1OUT |= BIT5;
-            MOTOR_PWM_Duty = 14000;
+            TACCR2 |= 14000;
             flag_forwards = 0;
         }
-        if(flag_backwards){
+        else if(flag_backwards){
             P1OUT &= ~BIT5;
-            MOTOR_PWM_Duty = 0;
+            TACCR2 |= 0;
             flag_backwards = 0;
         }
         if(flag_on){
-                    P1SEL |= BIT4;
-                    P1OUT |= BIT4;
-                    flag_on=0;
-            }
+            P1SEL |= BIT4;
+            P1OUT |= BIT4;
+            flag_on=0;
+        }
         else if(flag_off){
-                P1SEL &= ~BIT4;
-                P1OUT &= ~BIT4;
-                flag_off=0;
-
-            }
+            P1SEL &= ~BIT4;
+            P1OUT &= ~BIT4;
+            flag_off=0;
+        }
         if(flag_right||flag_left){
             // Move right toward the maximum step value
             if(flag_right&&position<117){
@@ -235,38 +234,44 @@ __interrupt void timerServo(void)
         TA1CCTL1 &= ~CCIE;            // Timer 1 interrupt disable
 }
 
-
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
     //On.
     if(UCA0RXBUF=='N'){
         flag_on = 1;
+        P1OUT |= TXLED;
     }
     //Off.
-    else if(UCA0RXBUF=='F'){
+    if(UCA0RXBUF=='F'){
         //P1SEL &= ~BIT4;
         //P1OUT &= ~BIT4;
         flag_off = 1;
+        P1OUT |= TXLED;
     }
 
     if(UCA0RXBUF=='R'){
         flag_right = 1;
+        P1OUT |= TXLED;
     }
-    else if(UCA0RXBUF=='L'){
+    if(UCA0RXBUF=='L'){
         flag_left = 1;
+        P1OUT |= TXLED;
     }
-    else if(UCA0RXBUF=='U')
-    {
+    if(UCA0RXBUF=='C'){
+        flag_center = 1;
+        P1OUT &= ~TXLED;
+    }
+    if(UCA0RXBUF=='U'){
         flag_forwards = 1;
+        P1OUT |= TXLED;
     }
-    else if(UCA0RXBUF=='D')
-    {
+    if(UCA0RXBUF=='D'){
         flag_backwards = 1;
+        P1OUT |= TXLED;
     }
     if(flag_right||flag_left||flag_center){
-        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
-
+    __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 }
 
