@@ -18,7 +18,7 @@
 
 unsigned int PWM_Period     = (MCU_CLOCK / PWM_FREQUENCY);  // PWM Period
 unsigned int PWM_Duty       = 0;                            // %
-unsigned int MOTOR_PWM_Duty = 14000;
+unsigned int MOTOR_PWM_Duty = 0;
 
 char temp[50];
 //WiFi access point.
@@ -30,7 +30,7 @@ const char * AP[]={
         //"AT+CIFSR\r\n",
         "AT+CIPMUX=1\r\n",
         "AT+CIPSERVER=1,100\r\n",
-        "AT+SLEEP=0\r\n",
+        //"AT+SLEEP=0\r\n",
 };
 
 
@@ -148,7 +148,7 @@ int main(void)
     while (1) {
         if(flag_forwards){
             P1OUT |= BIT5;
-            TACCR2 |= 14000;
+            TACCR2 |= 0;
             flag_forwards = 0;
         }
         else if(flag_backwards){
@@ -174,25 +174,22 @@ int main(void)
                 TA1CCTL1 |= CCIE;
             }
             // Move left toward the minimum step value
-            if(flag_left&&position>50){
+            if(flag_left&&position>78){
                 position=position-3;
                 TACCR1 = servo_lut[position];
                 TA1CCTL1 |= CCIE;
             }
-            UC0IE &= ~UCA0TXIE;
-            UC0IE |= UCA0RXIE;
             flag_right = 0;
             flag_left = 0;
-            __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
         }
         else if(flag_center){
             position=95;
             TACCR1 = servo_lut[position];
             TA1CCTL1 |= CCIE;
             flag_center=0;
-            UC0IE &= ~UCA0TXIE;
-            __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
         }
+        TA1CCTL1 |= CCIE;
+        __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
     }
 }
 
@@ -241,6 +238,7 @@ __interrupt void USCI0RX_ISR(void)
     if(UCA0RXBUF=='N'){
         flag_on = 1;
         P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     //Off.
     if(UCA0RXBUF=='F'){
@@ -248,30 +246,33 @@ __interrupt void USCI0RX_ISR(void)
         //P1OUT &= ~BIT4;
         flag_off = 1;
         P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 
     if(UCA0RXBUF=='R'){
         flag_right = 1;
         P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='L'){
         flag_left = 1;
         P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='C'){
         flag_center = 1;
         P1OUT &= ~TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='U'){
         flag_forwards = 1;
         P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='D'){
         flag_backwards = 1;
         P1OUT |= TXLED;
-    }
-    if(flag_right||flag_left||flag_center){
-    __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 }
 
