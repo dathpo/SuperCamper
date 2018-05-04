@@ -25,8 +25,8 @@ char temp[50];
 const char * AP[]={
         //"Z\r\n",
         "AT+RST\r\n",
-        "AT+CWMODE=3\r\n",
-        "AT+CWSAP=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
+        //"AT+CWMODE=3\r\n",
+        //"AT+CWSAP=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
         //"AT+CIFSR\r\n",
         "AT+CIPMUX=1\r\n",
         "AT+CIPSERVER=1,100\r\n",
@@ -121,7 +121,7 @@ int main(void)
     UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
     UC0IE &= ~UCA0RXIE;         // Disable RX.
 
-    position=95;
+    position=81;
 
     // Transmission Timer Setup
     TA1CCTL0 |= CCIE;  //Interrupt Enable
@@ -132,13 +132,14 @@ int main(void)
     TA1CCTL1 &= ~CCIE;  //Interrupt Disabe - only to be used as a delay to servo rotation
     TA1CCR1 |= 256; // 0.125s
 
+
     __delay_cycles(200000);
     // Transmission Timer Setup
     TA1CCTL0=CCIE;  //Interrupt Enable
     TA1CTL = TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
     TA1CCR0 = TX_CLOCK;
-    //Center is position 95.
     TACCR1 = servo_lut[position];
+    //Center is position 95.
     __delay_cycles(20000);
 
     __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
@@ -168,14 +169,14 @@ int main(void)
         }
         if(flag_right||flag_left){
             // Move right toward the maximum step value
-            if(flag_right&&position<117){
-                position=position+3;
+            if(flag_right){
+                position=117;
                 TACCR1 = servo_lut[position];
                 TA1CCTL1 |= CCIE;
             }
             // Move left toward the minimum step value
-            if(flag_left&&position>78){
-                position=position-3;
+            if(flag_left){
+                position=45;
                 TACCR1 = servo_lut[position];
                 TA1CCTL1 |= CCIE;
             }
@@ -183,7 +184,7 @@ int main(void)
             flag_left = 0;
         }
         else if(flag_center){
-            position=95;
+            position=81;
             TACCR1 = servo_lut[position];
             TA1CCTL1 |= CCIE;
             flag_center=0;
@@ -235,9 +236,9 @@ __interrupt void timerServo(void)
 __interrupt void USCI0RX_ISR(void)
 {
     //On.
-    if(UCA0RXBUF=='N'){
+    if(UCA0RXBUF=='Z'){
         flag_on = 1;
-        P1OUT |= TXLED;
+        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     //Off.
@@ -245,33 +246,33 @@ __interrupt void USCI0RX_ISR(void)
         //P1SEL &= ~BIT4;
         //P1OUT &= ~BIT4;
         flag_off = 1;
-        P1OUT |= TXLED;
+        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 
     if(UCA0RXBUF=='R'){
         flag_right = 1;
-        P1OUT |= TXLED;
+        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='L'){
         flag_left = 1;
-        P1OUT |= TXLED;
+        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='C'){
         flag_center = 1;
-        P1OUT &= ~TXLED;
+        //P1OUT &= ~TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='U'){
         flag_forwards = 1;
-        P1OUT |= TXLED;
+        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='D'){
         flag_backwards = 1;
-        P1OUT |= TXLED;
+        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 }
