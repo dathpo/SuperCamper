@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
                 flag_up=false;
             } else if(flag_on){
                 System.out.println("Engine On");
-                mTcpClient.sendMessage("N");
+                mTcpClient.sendMessage("Z");
                 flag_on=false;
             }else if(flag_off){
                 System.out.println("Engine Off");
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("Servo center");
                 mTcpClient.sendMessage("C");
             }
-            handler.postDelayed(r,50);
+            handler.postDelayed(r,200);
         }
     };
 

@@ -8,6 +8,7 @@
     tools:context="com.example.group3.supercamper.MainActivity"
     tools:showIn="@layout/activity_main">
 
+
     <ImageButton
         android:id="@+id/leftArrow"
         android:layout_width="150dp"
@@ -59,9 +60,7 @@
         android:layout_alignStart="@+id/engineSwitch"
         android:scaleX="2"
         android:scaleY="2"
-        android:checked="true"
-        android:text="Forward"
-    />
+        android:text="Forward" />
 
 
 </RelativeLayout>
