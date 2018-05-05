@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 sendMessage("5");
                 flag_center=false;
             }
-            handler.postDelayed(r,50);
+            handler.postDelayed(r,100);
         }
     };
 

@@ -47,7 +47,7 @@ public class TcpClient {
             public void run() {
                 if (out != null && !out.checkError()) {
                     System.out.println("Message: " + message);
-                    out.println(message);
+                    out.print(message);
                     out.flush();
                 }
             }
