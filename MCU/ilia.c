@@ -152,7 +152,7 @@ int main(void)
             TACCR2 |= 0;
             flag_forwards = 0;
         }
-        else if(flag_backwards){
+        if(flag_backwards){
             P1OUT &= ~BIT5;
             TACCR2 |= 0;
             flag_backwards = 0;
@@ -162,7 +162,7 @@ int main(void)
             P1OUT |= BIT4;
             flag_on=0;
         }
-        else if(flag_off){
+        if(flag_off){
             P1SEL &= ~BIT4;
             P1OUT &= ~BIT4;
             flag_off=0;
@@ -173,17 +173,17 @@ int main(void)
                 position=117;
                 TACCR1 = servo_lut[position];
                 TA1CCTL1 |= CCIE;
+                flag_right = 0;
             }
             // Move left toward the minimum step value
             if(flag_left){
                 position=45;
                 TACCR1 = servo_lut[position];
                 TA1CCTL1 |= CCIE;
+                flag_left = 0;
             }
-            flag_right = 0;
-            flag_left = 0;
         }
-        else if(flag_center){
+        if(flag_center){
             position=81;
             TACCR1 = servo_lut[position];
             TA1CCTL1 |= CCIE;
@@ -236,13 +236,15 @@ __interrupt void timerServo(void)
 __interrupt void USCI0RX_ISR(void)
 {
     //On.
-    if(UCA0RXBUF=='Z'){
+    if(UCA0RXBUF=='7'){
         flag_on = 1;
+        flag_forwards = 0;
+        flag_backwards = 0;
         //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     //Off.
-    if(UCA0RXBUF=='F'){
+    if(UCA0RXBUF=='9'){
         //P1SEL &= ~BIT4;
         //P1OUT &= ~BIT4;
         flag_off = 1;
@@ -250,27 +252,27 @@ __interrupt void USCI0RX_ISR(void)
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 
-    if(UCA0RXBUF=='R'){
+    if(UCA0RXBUF=='6'){
         flag_right = 1;
         //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    if(UCA0RXBUF=='L'){
+    if(UCA0RXBUF=='4'){
         flag_left = 1;
         //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    if(UCA0RXBUF=='C'){
+    if(UCA0RXBUF=='5'){
         flag_center = 1;
         //P1OUT &= ~TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    if(UCA0RXBUF=='U'){
+    if(UCA0RXBUF=='8'){
         flag_forwards = 1;
         //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    if(UCA0RXBUF=='D'){
+    if(UCA0RXBUF=='2'){
         flag_backwards = 1;
         //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
