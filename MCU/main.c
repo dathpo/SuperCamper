@@ -18,51 +18,21 @@
 
 unsigned int PWM_Period     = (MCU_CLOCK / PWM_FREQUENCY);  // PWM Period
 unsigned int PWM_Duty       = 0;                            // %
-unsigned int MOTOR_PWM_Duty = 14000;
+unsigned int MOTOR_PWM_Duty = 0;
 
-int index_tx=0,index_rx=0;
-char Reply[];
-//Server.
-//const char * Server[]={
-//"AT+CWMODE=3\r\n",
-//"AT+CWJAP=\"meng-project\",\"ptzcamera\"\r\n",
-//"AT+CIPMUX=1\r\n",
-//"AT+CIPSERVER=1,100\r\n",
-//};
-
+char temp[50];
 //WiFi access point.
 const char * AP[]={
-                   //"Z\r\n",
-                   "AT+RST\r\n",
-                   "AT+CWMODE=3\r\n",
-                   "AT+CWSAP=\"Ciao\",\"password\",3,0\r\n",
-                   "AT+CIFSR\r\n",
-                   "AT+CIPMUX=1\r\n",
-                   "AT+CIPSERVER=1,100\r\n",
-                   "AT+SLEEP=0\r\n",
+        //"Z\r\n",
+        "AT+RST\r\n",
+        "AT+CWMODE_CUR=2\r\n",
+        "AT+CWSAP_CUR=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
+        //"AT+CIFSR\r\n",
+        "AT+CIPMUX=1\r\n",
+        "AT+CIPSERVER=1,100\r\n",
+        //"AT+SLEEP=0\r\n",
 };
 
-void WiFiSetup() {
-    int size= sizeof(AP)/sizeof(AP[0]);
-    P1OUT |= TXLED;
-    int i=-1;
-    for (index_tx=0;index_tx<size;index_tx++) {
-        while(AP[index_tx][i++]!='\n')
-        {
-            char tmp = AP[index_tx][i];
-            UCA0TXBUF = AP[index_tx][i];
-        }
-        __delay_cycles(800000);
-        i=-1;
-    }
-    //UCA0TXBUF = AP[index][i++]; // TX next character
-    /* if (i == strlen(AP[index])+1) // TX over?
-    {
-        //UC0IE &= ~UCA0TXIE;
-        UC0IE |= UCA0RXIE;
-    } */
-    P1OUT &= ~TXLED;
-}
 
 //Creates TCP server. Port number is 333 by default.
 //const char test[] = {"AT+CIPSERVER=1,100\r\n"};
@@ -76,13 +46,16 @@ void WiFiSetup() {
 //Default connection mode is 1, multiple connections.
 //const char string[] = { "AT+CIPMUX=1\r\n"};
 
-unsigned int i; 	//Counter
+unsigned int i;     //Counter
 int index=0;
 int size;
 int flag_left = 0;
 int flag_right = 0;
 int flag_center = 0;
-
+int flag_on = 0;
+int flag_off = 0;
+int flag_forwards = 0;
+int flag_backwards = 0;
 int main(void)
 {
     WDTCTL  = WDTPW + WDTHOLD;     // Kill watchdog timer
@@ -92,6 +65,9 @@ int main(void)
     unsigned int servo_stepval, servo_stepnow;
     unsigned int servo_lut[ SERVO_STEPS+1 ];
     unsigned int position;
+    size= sizeof(AP)/sizeof(AP[0]);
+    BCSCTL3 |= LFXT1S_2;    //initialise clock registers
+
     // Calculate the step value and define the current step, defaults to minimum.
     servo_stepval   = ( (SERVO_MAX - SERVO_MIN) / SERVO_STEPS );
     servo_stepnow   = SERVO_MIN;
@@ -110,94 +86,136 @@ int main(void)
     P1DIR   |= BIT6;               // P2.6 = output
     P1SEL   |= BIT6;               // P2.6 = TA1 output
 
-    // P1.3 Button Interrupt Config
-    P1IE |=  BIT3;                            // P1.3 interrupt enabled
-    P1IES |= BIT3;                            // P1.3 Hi/lo edge
-    P1REN |= BIT3;                            // Enable Pull Up on SW2 (P1.3)
-    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
-    //BIT3 on Port 1 can be used as Switch
+//  // P1.3 Button Interrupt Config
+//  P1IE |=  BIT3;                            // P1.3 interrupt enabled
+//    P1IES |= BIT3;                            // P1.3 Hi/lo edge
+//    P1REN |= BIT3;                            // Enable Pull Up on SW2 (P1.3)
+//    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+//                                              //BIT3 on Port 1 can be used as Switch
     // Motor Control Setup
     TACCTL2 = OUTMOD_7;            // TACCR1 reset/set
     TACCR2  = MOTOR_PWM_Duty;            // TACCR1 PWM Duty Cycle
     P1DIR |= BIT4;                            // Set P1.0 to output direction
-    P1SEL |= BIT4;
-
+    P1SEL &= ~BIT4;
+    P1OUT &= ~BIT4;
     P1DIR |= BIT5;
 
     // WiFi Setup
-    DCOCTL = 0; 			 // Select lowest DCOx and MODx settings
+    DCOCTL = 0;              // Select lowest DCOx and MODx settings
     BCSCTL1 = CALBC1_1MHZ;   // Set DCO
     DCOCTL = CALDCO_1MHZ;
-    P2DIR |= 0xFF;			 // All P2.x outputs
-    P2OUT &= 0x00; 			 // All P2.x reset
+    P2DIR |= 0xFF;           // All P2.x outputs
+    P2OUT &= 0x00;           // All P2.x reset
     P1SEL |= RXD + TXD ;     // P1.1 = RXD, P1.2=TXD
     P1SEL2 |= RXD + TXD ;    // P1.1 = RXD, P1.2=TXD
     P1DIR |= TXLED;
+    P1OUT &= ~TXLED;
+
+
     //P1OUT &= 0x00;
     UCA0CTL1 |= UCSSEL_2;        // SMCLK
     UCA0BR0 = 0x08;              // 1MHz 115200
     UCA0BR1 = 0x00;              // 1MHz 115200
     UCA0MCTL = UCBRS2 + UCBRS0;  // Modulation UCBRSx = 5
     UCA0CTL1 &= ~UCSWRST;        // **Initialize USCI state machine**
-    //UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
+    UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
     UC0IE &= ~UCA0RXIE;         // Disable RX.
-    WiFiSetup();
-    UC0IE |= UCA0RXIE;
 
-    position=95;
+    position=81;
 
-    //Center is position 95.
+    // Transmission Timer Setup
+    TA1CCTL0 |= CCIE;  //Interrupt Enable
+    TA1CTL |= TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
+    TA1CCR0 = TX_CLOCK;
+
+    // Transmission Timer Setup
+    TA1CCTL1 &= ~CCIE;  //Interrupt Disabe - only to be used as a delay to servo rotation
+    TA1CCR1 |= 256; // 0.125s
+
+
+    __delay_cycles(200000);
+    // Transmission Timer Setup
+    TA1CCTL0=CCIE;  //Interrupt Enable
+    TA1CTL = TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
+    TA1CCR0 = TX_CLOCK;
     TACCR1 = servo_lut[position];
+    //Center is position 95.
     __delay_cycles(20000);
 
-    //Comment this line out for servo use.
     __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
 
     //Max range is 117 (right side).
     //Min range is 78. (left side).
     while (1) {
+        if(flag_forwards){
+            P1OUT |= BIT5;
+            TACCR2 |= 0;
+            flag_forwards = 0;
+        }
+        else if(flag_backwards){
+            P1OUT &= ~BIT5;
+            TACCR2 |= 0;
+            flag_backwards = 0;
+        }
+        if(flag_on){
+            P1SEL |= BIT4;
+            P1OUT |= BIT4;
+            flag_on=0;
+        }
+        else if(flag_off){
+            P1SEL &= ~BIT4;
+            P1OUT &= ~BIT4;
+            flag_off=0;
+        }
         if(flag_right||flag_left){
-            // Move forward toward the maximum step value
-            if(flag_right&&flag_right<117){
-                position=position+5;
+            // Move right toward the maximum step value
+            if(flag_right){
+                position=117;
                 TACCR1 = servo_lut[position];
-                __delay_cycles(20000);
+                TA1CCTL1 |= CCIE;
+                flag_right = 0;
             }
-            // Move backward toward the minimum step value
-            if(flag_left&&flag_left>78){
-                position--;
+            // Move left toward the minimum step value
+            if(flag_left){
+                position=45;
                 TACCR1 = servo_lut[position];
-                __delay_cycles(20000);
+                TA1CCTL1 |= CCIE;
+                flag_left = 0;
             }
-            //UC0IE &= ~UCA0TXIE;
-            //UC0IE |= UCA0RXIE;
-            flag_right = 0;
-            flag_left = 0;
-            __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
         }
-        else if(flag_center){
-            position=95;
+        if(flag_center){
+            position=81;
             TACCR1 = servo_lut[position];
-            __delay_cycles(20000);
+            TA1CCTL1 |= CCIE;
             flag_center=0;
-            //UC0IE &= ~UCA0TXIE;
-            __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
         }
+        TA1CCTL1 |= CCIE;
+        __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
     }
 }
 
-/*#pragma vector=USCIAB0TX_VECTOR
+#pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR(void)
 {
-    P1OUT |= TXLED;
-    UCA0TXBUF = AP[index][i++]; // TX next character
-    if (i == strlen(AP[index])+1) // TX over?
-    {
-        UC0IE &= ~UCA0TXIE;
-        UC0IE |= UCA0RXIE;
+
+    //P1OUT |= TXLED;
+    if (index>=size){       //if whole message has been sent
+        P1OUT &= ~TXLED;    //Turn off transmitter LED
+        UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
+        UC0IE |= UCA0RXIE; //Enable receiver interrupts
     }
-    P1OUT &= ~TXLED;
-} */
+    else{       //more commands to send
+        temp[i] = AP[index][i];
+        UCA0TXBUF = AP[index][i++]; // iterate next character
+        if (i == strlen(AP[index])+1){ // message is over
+            index++;    //go to next message
+            i=0;
+            UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
+            TA1CCTL0 = CCIE;              // Timer 1 interrupt enable
+            memset(&temp[0], 0, sizeof(temp));
+        }
+    }
+}
 
 
 #pragma vector=TIMER1_A0_VECTOR
@@ -214,34 +232,49 @@ __interrupt void timerServo(void)
         TA1CCTL1 &= ~CCIE;            // Timer 1 interrupt disable
 }
 
-
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
-    //P1OUT |= RXLED;
-
-    if(index>=size){
-        UC0IE &= ~UCA0TXIE; // Enable USCI_A0 TX interrupt
+    //On.
+    if(UCA0RXBUF=='7'){
+        flag_on = 1;
+        flag_forwards = 0;
+        flag_backwards = 0;
+        //P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    else
-    {
-        UC0IE |= UCA0TXIE;
-        UC0IE &= ~UCA0RXIE;
-        i=0;
+    //Off.
+    if(UCA0RXBUF=='9'){
+        //P1SEL &= ~BIT4;
+        //P1OUT &= ~BIT4;
+        flag_off = 1;
+        //P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    Reply[index_rx++]= UCA0RXBUF;
 
-    if(UCA0RXBUF=='Q'){
+    if(UCA0RXBUF=='6'){
         flag_right = 1;
+        //P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    if(UCA0RXBUF=='Z'){
+    if(UCA0RXBUF=='4'){
         flag_left = 1;
+        //P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    if(UCA0RXBUF=='K')
-    {
+    if(UCA0RXBUF=='5'){
         flag_center = 1;
+        //P1OUT &= ~TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-    if(flag_right||flag_left||flag_center){
+    if(UCA0RXBUF=='8'){
+        flag_forwards = 1;
+        //P1OUT |= TXLED;
+        __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
+    }
+    if(UCA0RXBUF=='2'){
+        flag_backwards = 1;
+        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 }
@@ -251,6 +284,12 @@ __interrupt void USCI0RX_ISR(void)
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
-    P1OUT ^= BIT5;                            // P1.0 = toggle
-    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+  //turn the engine on and off
+  P1SEL ^= BIT4;
+  P1OUT ^= BIT4;
+
+  //toggle direction
+  P1OUT ^= BIT5;                            // P1.0 = toggle
+
+  P1IFG &= ~BIT3;                           // P1.3 IFG cleared
 }
