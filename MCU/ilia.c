@@ -25,6 +25,8 @@ char temp[50];
 const char * AP[]={
         //"Z\r\n",
         "AT+RST\r\n",
+        //"AT+CWMODE=2\r\n",
+        //"AT+CWSAP=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
         "AT+CWMODE_CUR=2\r\n",
         "AT+CWSAP_CUR=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
         //"AT+CIFSR\r\n",
@@ -235,12 +237,13 @@ __interrupt void timerServo(void)
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
+    P1OUT ^= TXLED;
     //On.
     if(UCA0RXBUF=='7'){
         flag_on = 1;
-        flag_forwards = 0;
-        flag_backwards = 0;
-        //P1OUT |= TXLED;
+        //flag_forwards = 0;
+        //flag_backwards = 0;
+
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     //Off.
@@ -248,33 +251,27 @@ __interrupt void USCI0RX_ISR(void)
         //P1SEL &= ~BIT4;
         //P1OUT &= ~BIT4;
         flag_off = 1;
-        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 
     if(UCA0RXBUF=='6'){
         flag_right = 1;
-        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='4'){
         flag_left = 1;
-        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='5'){
         flag_center = 1;
-        //P1OUT &= ~TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='8'){
         flag_forwards = 1;
-        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     if(UCA0RXBUF=='2'){
         flag_backwards = 1;
-        //P1OUT |= TXLED;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
 }
