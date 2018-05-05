@@ -10,53 +10,57 @@
 
     <ImageButton
         android:id="@+id/leftArrow"
-        android:layout_width="175dp"
-        android:layout_height="175dp"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:layout_marginLeft="24dp"
-        android:layout_marginStart="24dp"
-        android:scaleType="fitCenter"
-        android:background="@null"
-        app:srcCompat="@drawable/arrow_left" />
-
-    <ImageButton
-        android:id="@+id/rightArrow"
-        android:layout_width="175dp"
-        android:layout_height="175dp"
-        android:layout_centerVertical="true"
-        android:layout_toEndOf="@+id/leftArrow"
-        android:layout_toRightOf="@+id/leftArrow"
-        android:scaleType="fitCenter"
-        android:background="@null"
-        app:srcCompat="@drawable/arrow_right" />
-
-    <ImageButton
-        android:id="@+id/downArrow"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        android:layout_alignLeft="@+id/upArrow"
-        android:layout_alignStart="@+id/upArrow"
-        android:layout_below="@+id/upArrow"
+        android:layout_marginLeft="34dp"
+        android:layout_marginStart="34dp"
         android:background="@null"
         android:scaleType="fitXY"
         android:scaleX="1.55"
         android:scaleY="1.55"
-        app:srcCompat="@drawable/arrow_down" />
+        app:srcCompat="@drawable/arrow_left" />
 
     <ImageButton
-        android:id="@+id/upArrow"
+        android:id="@+id/rightArrow"
         android:layout_width="150dp"
         android:layout_height="150dp"
+        android:layout_alignTop="@+id/leftArrow"
+        android:layout_toEndOf="@+id/leftArrow"
+        android:layout_toRightOf="@+id/leftArrow"
+        android:background="@null"
+        android:scaleType="fitXY"
+        android:scaleX="1.55"
+        android:scaleY="1.55"
+        app:srcCompat="@drawable/arrow_right" />
+
+    <Switch
+        android:id="@+id/engineSwitch"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
-        android:layout_marginEnd="24dp"
-        android:layout_marginRight="24dp"
-        android:layout_marginTop="17dp"
-        android:background="@null"
-        android:scaleType="fitXY"
-        app:srcCompat="@drawable/arrow_up" />
+        android:layout_marginEnd="76dp"
+        android:layout_marginRight="76dp"
+        android:layout_marginTop="49dp"
+        android:scaleX="2"
+        android:scaleY="2"
+        android:text="Engine" />
+
+    <Switch
+        android:id="@+id/directionSwitch"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:layout_alignBottom="@+id/rightArrow"
+        android:layout_alignLeft="@+id/engineSwitch"
+        android:layout_alignStart="@+id/engineSwitch"
+        android:scaleX="2"
+        android:scaleY="2"
+        android:checked="false"
+        android:text="Forward" />
+
 
 </RelativeLayout>

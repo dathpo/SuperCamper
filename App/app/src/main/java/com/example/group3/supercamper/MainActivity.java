@@ -3,39 +3,27 @@ package com.example.group3.supercamper;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.app.Activity;
-import android.os.Bundle;
 
-import android.view.View;
-import android.util.Log;
-import java.util.ArrayList;
 
-import android.os.AsyncTask;
-
-import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ListView;
+import android.widget.Switch;
 
-import retrofit2.Call;
 
 public class MainActivity extends AppCompatActivity {
-    private ListView mList;
-    private ArrayList<String> arrayList;
 
     private TcpClient mTcpClient = null;
     private ConnectTask connecttask = null;
     private String ipAddressOfServerDevice;
+    private String lastMessage="";
 
-    ImageButton b1,b2,b3,b4;
-    boolean flag_left,flag_right,flag_down,flag_up,flag_center;
+    ImageButton b1,b2;
+    Switch s1,s2;
+    boolean flag_left,flag_right,flag_down,flag_up,flag_on,flag_off,flag_center;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,16 +31,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         ipAddressOfServerDevice = "192.168.4.1";
-
-        arrayList = new ArrayList<String>();
-
         connecttask = new ConnectTask();
         connecttask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
         b1 = findViewById(R.id.leftArrow);
         b2 = findViewById(R.id.rightArrow);
-        b3 = findViewById(R.id.downArrow);
-        b4 = findViewById(R.id.upArrow);
+        s1 = findViewById(R.id.engineSwitch);
+        s2 = findViewById(R.id.directionSwitch);
 
         b1.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -61,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
                     flag_left = true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     flag_left = false;
+                    flag_center=true;
                 }
                 return false;
             }
@@ -73,34 +59,36 @@ public class MainActivity extends AppCompatActivity {
                     flag_right = true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     flag_right = false;
+                    flag_center=true;
                 }
                 return false;
             }
         });
 
-        b3.setOnTouchListener(new View.OnTouchListener() {
+        s1.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    flag_down = true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    flag_down = false;
-                }
-                return false;
+            public void onClick(View v) {
+                if (s1.isChecked())
+                    flag_on=true;
+                else
+                    flag_off=true;
             }
         });
 
-        b4.setOnTouchListener(new View.OnTouchListener() {
+        s2.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            public void onClick(View v) {
+                if (s2.isChecked()) {
                     flag_up = true;
-                } else if (event.getAction() == MotionEvent.ACTION_UP) {
-                    flag_up = false;
+                    s2.setText("Forward");
                 }
-                return false;
+                else {
+                    flag_down = true;
+                    s2.setText("Reverse");
+                }
             }
         });
+
         handler.post(r);
     }
 
@@ -109,22 +97,37 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             if(flag_left){
-                System.out.println("Left");
-                mTcpClient.sendMessage("L");
+                sendMessage("L");
             } else if(flag_right){
-                System.out.println("Right");
-                mTcpClient.sendMessage("R");
+                sendMessage("R");
             } else if(flag_down) {
-                System.out.println("Reverse");
-                mTcpClient.sendMessage("D");
+                sendMessage("D");
+                flag_down=false;
             } else if(flag_up) {
-                System.out.println("Forward");
-                mTcpClient.sendMessage("U");
+                sendMessage("U");
+                flag_up=false;
+            } else if(flag_on){
+                sendMessage("Z");
+                flag_on=false;
+            }else if(flag_off){
+                sendMessage("F");
+                flag_off=false;
             }
-            handler.postDelayed(r,50);
+            else if(flag_center){
+                sendMessage("C");
+                flag_center=false;
+            }
+            handler.postDelayed(r,100);
         }
     };
 
+    private void sendMessage(String s){
+        if (!s.equals(lastMessage)) {
+            lastMessage = s;
+            System.out.println(s);
+            mTcpClient.sendMessage(s);
+        }
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
