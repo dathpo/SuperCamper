@@ -1,5 +1,6 @@
 package com.example.group3.supercamper;
 
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,7 +21,6 @@ public class MainActivity extends AppCompatActivity {
     private ConnectTask connecttask = null;
     private String ipAddressOfServerDevice;
     private String lastMessage="";
-
     ImageButton b1,b2;
     Switch s1,s2;
     boolean flag_left,flag_right,flag_down,flag_up,flag_on,flag_off,flag_center;
@@ -29,6 +29,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final MediaPlayer horn = MediaPlayer.create(MainActivity.this, R.raw.car_horn);
+        final MediaPlayer start = MediaPlayer.create(MainActivity.this, R.raw.start);
+
+
+
+        final MediaPlayer turning = MediaPlayer.create(MainActivity.this, R.raw.turning);
+        final MediaPlayer forward = MediaPlayer.create(MainActivity.this, R.raw.forward);
+        final MediaPlayer reverse = MediaPlayer.create(MainActivity.this, R.raw.reverse);
+        final MediaPlayer left = MediaPlayer.create(MainActivity.this, R.raw.left);
+        final MediaPlayer engineOff = MediaPlayer.create(MainActivity.this, R.raw.engine_off);
+
+
+        horn.start();
+        forward.setLooping(true);
+        reverse.setLooping(true);
+        engineOff.setLooping(true);
 
         ipAddressOfServerDevice = "192.168.4.1";
         connecttask = new ConnectTask();
@@ -43,10 +59,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    left.start();
                     flag_left = true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     flag_left = false;
                     flag_center=true;
+
                 }
                 return false;
             }
@@ -56,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onTouch(View view, MotionEvent event) {
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    turning.start();
                     flag_right = true;
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     flag_right = false;
@@ -68,10 +87,23 @@ public class MainActivity extends AppCompatActivity {
         s1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (s1.isChecked())
-                    flag_on=true;
-                else
-                    flag_off=true;
+                if (s1.isChecked()) {
+                    engineOff.stop();
+                    engineOff.prepareAsync();
+                    flag_on = true;
+                    if (s2.isChecked()) {
+                        forward.start();
+                    } else
+                        reverse.start();
+                }
+                else {
+                    flag_off = true;
+                    forward.stop();
+                    reverse.stop();
+                    reverse.prepareAsync();
+                    forward.prepareAsync();
+                    engineOff.start();
+                }
             }
         });
 
@@ -81,10 +113,20 @@ public class MainActivity extends AppCompatActivity {
                 if (s2.isChecked()) {
                     flag_up = true;
                     s2.setText("Forward");
+                    if (s1.isChecked()){
+                        forward.start();
+                        reverse.stop();
+                        reverse.prepareAsync();
+                    }
                 }
                 else {
                     flag_down = true;
                     s2.setText("Reverse");
+                    if (s1.isChecked()){
+                        reverse.start();
+                        forward.stop();
+                        forward.prepareAsync();
+                    }
                 }
             }
         });
@@ -98,8 +140,10 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             if(flag_left){
                 sendMessage("4");
+                flag_left=false;
             } else if(flag_right){
                 sendMessage("6");
+                flag_right=false;
             } else if(flag_down) {
                 sendMessage("2");
                 flag_down=false;
