@@ -97,27 +97,27 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
             if(flag_left){
-                sendMessage("L");
+                sendMessage("4");
             } else if(flag_right){
-                sendMessage("R");
+                sendMessage("6");
             } else if(flag_down) {
-                sendMessage("D");
+                sendMessage("2");
                 flag_down=false;
             } else if(flag_up) {
-                sendMessage("U");
+                sendMessage("8");
                 flag_up=false;
             } else if(flag_on){
-                sendMessage("Z");
+                sendMessage("7");
                 flag_on=false;
             }else if(flag_off){
-                sendMessage("F");
+                sendMessage("9");
                 flag_off=false;
             }
             else if(flag_center){
-                sendMessage("C");
+                sendMessage("5");
                 flag_center=false;
             }
-            handler.postDelayed(r,100);
+            handler.postDelayed(r,50);
         }
     };
 
