@@ -25,8 +25,8 @@ char temp[50];
 const char * AP[]={
         //"Z\r\n",
         "AT+RST\r\n",
-        //"AT+CWMODE=3\r\n",
-        //"AT+CWSAP=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
+        "AT+CWMODE_CUR=2\r\n",
+        "AT+CWSAP_CUR=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
         //"AT+CIFSR\r\n",
         "AT+CIPMUX=1\r\n",
         "AT+CIPSERVER=1,100\r\n",
@@ -152,7 +152,7 @@ int main(void)
             TACCR2 |= 0;
             flag_forwards = 0;
         }
-        if(flag_backwards){
+        else if(flag_backwards){
             P1OUT &= ~BIT5;
             TACCR2 |= 0;
             flag_backwards = 0;
@@ -162,7 +162,7 @@ int main(void)
             P1OUT |= BIT4;
             flag_on=0;
         }
-        if(flag_off){
+        else if(flag_off){
             P1SEL &= ~BIT4;
             P1OUT &= ~BIT4;
             flag_off=0;
