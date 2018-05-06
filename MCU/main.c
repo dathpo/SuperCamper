@@ -7,7 +7,7 @@
 #define RXD BIT1
 #define TXD BIT2
 
-#define TX_CLOCK 4096
+#define TX_CLOCK 4096               // Corresponds to 1 second
 
 #define MCU_CLOCK           1000000
 #define PWM_FREQUENCY       46      // In Hertz, ideally 50Hz.
@@ -85,7 +85,7 @@ int main(void)
     TACCTL2 = OUTMOD_7;               // TACCR1 reset/set
     TACCR2  = MOTOR_PWM_Duty;         // TACCR1 PWM Duty Cycle
     P1DIR |= BIT4;                    // Set P1.0 to output direction
-    P1SEL &= ~BIT4;
+    P1SEL &= ~BIT4;                   // Turn Motor Off
     P1OUT &= ~BIT4;
     P1DIR |= BIT5;
 
@@ -163,14 +163,14 @@ int main(void)
                 TACCR1 = servo_lut[position];
                 TA1CCTL1 |= CCIE;
                 flag_left = 0;
-                previous = 1;
+                previous = 1;         // Save in memory that the last servo command was left 
             }
         }
         if(flag_center){              // Change to centre
-            if(previous){
+            if(previous){             // Last servo was left -> pick the correct value
                 position = 95;
             }
-            else{
+            else{                     // Last servo was right
                 position=86;
             }
 
