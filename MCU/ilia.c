@@ -32,6 +32,7 @@ const char * AP[]={
         //"AT+CIFSR\r\n",
         "AT+CIPMUX=1\r\n",
         "AT+CIPSERVER=1,100\r\n",
+        "AT+CIPSTO=0\r\n",
         //"AT+SLEEP=0\r\n",
 };
 
@@ -58,6 +59,8 @@ int flag_on = 0;
 int flag_off = 0;
 int flag_forwards = 0;
 int flag_backwards = 0;
+int previous = 0;
+
 int main(void)
 {
     WDTCTL  = WDTPW + WDTHOLD;     // Kill watchdog timer
@@ -123,8 +126,8 @@ int main(void)
     UC0IE |= UCA0TXIE;          // Enable USCI_A0 TX interrupt
     UC0IE &= ~UCA0RXIE;         // Disable RX.
 
-    position=81;
-
+    position=117;
+    flag_center=1;
     // Transmission Timer Setup
     TA1CCTL0 |= CCIE;  //Interrupt Enable
     TA1CTL |= TASSEL_1 + MC_1 + ID_3; // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
@@ -143,8 +146,6 @@ int main(void)
     TACCR1 = servo_lut[position];
     //Center is position 95.
     __delay_cycles(20000);
-
-    __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
 
     //Max range is 117 (right side).
     //Min range is 78. (left side).
@@ -183,13 +184,19 @@ int main(void)
                 TACCR1 = servo_lut[position];
                 TA1CCTL1 |= CCIE;
                 flag_left = 0;
+                previous = 1;
             }
         }
         if(flag_center){
-            position=81;
+            if(previous){
+                position = 95;
+            }
+            else{position=86;}
+
             TACCR1 = servo_lut[position];
             TA1CCTL1 |= CCIE;
             flag_center=0;
+            previous=0;
         }
         TA1CCTL1 |= CCIE;
         __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ int until Byte RXed
@@ -237,7 +244,6 @@ __interrupt void timerServo(void)
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
-    P1OUT ^= TXLED;
     //On.
     if(UCA0RXBUF=='7'){
         flag_on = 1;
