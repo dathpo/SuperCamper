@@ -22,7 +22,7 @@ unsigned int MOTOR_PWM_Duty = 0;
 
 char temp[50];
 
-//AT commands used for ESP8266 configuration.
+// AT commands used for ESP8266 configuration.
 const char * AP[]={
         //Reset ESP8266 module.
         "AT+RST\r\n",
@@ -38,7 +38,7 @@ const char * AP[]={
         "AT+CIPSTO=0\r\n",
 };
 
-//Variables declaration.
+// Variables declaration.
 unsigned int i;
 int index=0;
 int size;
@@ -61,19 +61,19 @@ int main(void)
     unsigned int servo_lut[ SERVO_STEPS+1 ];
     unsigned int position;
     size= sizeof(AP)/sizeof(AP[0]);
-    BCSCTL3 |= LFXT1S_2; //Initialise clock registers
+    BCSCTL3 |= LFXT1S_2; // Initialise clock registers
 
-    servo_stepval   = ( (SERVO_MAX - SERVO_MIN) / SERVO_STEPS ); //Calculate step value
+    servo_stepval   = ( (SERVO_MAX - SERVO_MIN) / SERVO_STEPS ); // Calculate step value
     servo_stepnow   = SERVO_MIN;
 
-    for (position = 0; position < SERVO_STEPS; position++) { //Fill look up table with positions
+    for (position = 0; position < SERVO_STEPS; position++) { // Fill look up table with positions
         servo_stepnow += servo_stepval;
         servo_lut[position] = servo_stepnow;
     }
-    //Max value of is 117 (right side).
-    //Min range is 78 (left side).
+    // Max value of is 117 (right side).
+    // Min range is 78 (left side).
 
-    //PWM setup.
+    // PWM setup.
     TACCTL1 = OUTMOD_7;               // TACCR1 reset/set
     TACTL   = TASSEL_2 + MC_1;        // SMCLK, upmode
     TACCR0  = PWM_Period-1;           // PWM Period
@@ -81,7 +81,7 @@ int main(void)
     P1DIR   |= BIT6;                  // P2.6 = output
     P1SEL   |= BIT6;                  // P2.6 = TA1 output
 
-    //Motor Control Setup
+    // Motor Control Setup
     TACCTL2 = OUTMOD_7;               // TACCR1 reset/set
     TACCR2  = MOTOR_PWM_Duty;         // TACCR1 PWM Duty Cycle
     P1DIR |= BIT4;                    // Set P1.0 to output direction
@@ -118,20 +118,16 @@ int main(void)
 
     // Transmission Timer Setup
     TA1CCTL1 &= ~CCIE;                // Interrupt Disable - only to be used as a delay to servo rotation
-    TA1CCR1 |= 256; // 0.125s
+    TA1CCR1 |= 256;                   // 0.125s
 
 
-    __delay_cycles(200000);           // Delays for setting up the ESP8266.
+    __delay_cycles(200000);           // Delays for setting up the ESP8266
 
-    // Transmission Timer Setup
-    TA1CCTL0=CCIE;                    // Interrupt Enable
-    TA1CTL = TASSEL_1 + MC_1 + ID_3;  // Use ACLK (32768 Hz), divide by 8 = 4096, divide by CCR0
-    TA1CCR0 = TX_CLOCK;
-    TACCR1 = servo_lut[position];
+    TACCR1 = servo_lut[position];     // Start from centre position by default
 
     __delay_cycles(20000);
 
-    //Main loop
+    // Main loop
     while (1) {
         if(flag_forwards){            // Car moves forwards
             P1OUT |= BIT5;
@@ -188,7 +184,7 @@ int main(void)
     }
 }
 
-//Interrupt service routine for UART transmission
+// Interrupt service routine for UART transmission
 #pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR(void)
 {
@@ -209,7 +205,7 @@ __interrupt void USCI0TX_ISR(void)
         }
     }
 }
-//Interrupt service routine for timer
+// Interrupt service routine for timer used for ESP8266
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void timer(void)
 {
@@ -218,47 +214,48 @@ __interrupt void timer(void)
         UC0IE |= UCA0TXIE;              // Enable transmitter interrupts
 }
 
+// Interrupt service routine for timer used for servo
 #pragma vector=TIMER1_A1_VECTOR
 __interrupt void timerServo(void)
 {
         TA1CCTL1 &= ~CCIE;              // Timer 1 interrupt disable
 }
 
-//Interrupt service routine for UART receiver
+// Interrupt service routine for UART receiver
 #pragma vector=USCIAB0RX_VECTOR
 __interrupt void USCI0RX_ISR(void)
 {
-    //Motor is on
+    // Motor is on
     if(UCA0RXBUF=='7'){
         flag_on = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Exit low power mode
     }
-    //Motor is off
+    // Motor is off
     if(UCA0RXBUF=='9'){
         flag_off = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE);
     }
-    //Turn right
+    // Turn right
     if(UCA0RXBUF=='6'){
         flag_right = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE);
     }
-    //Turn left
+    // Turn left
     if(UCA0RXBUF=='4'){
         flag_left = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE);
     }
-    //Turn to centre
+    // Turn to centre
     if(UCA0RXBUF=='5'){
         flag_center = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE);
     }
-    //Move forwards
+    // Move forwards
     if(UCA0RXBUF=='8'){
         flag_forwards = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE);
 
-    //Move backwards
+    // Move backwards
     if(UCA0RXBUF=='2'){
         flag_backwards = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE);
@@ -269,11 +266,11 @@ __interrupt void USCI0RX_ISR(void)
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
 {
-  //Turn the engine on and off
+  // Turn the engine on and off
   P1SEL ^= BIT4;
   P1OUT ^= BIT4;
 
-  //Toggle direction
+  // Toggle direction
   P1OUT ^= BIT5;                            // P1.0 = toggle
   P1IFG &= ~BIT3;                           // P1.3 IFG cleared
 }
