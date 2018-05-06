@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.Switch;
 
@@ -84,10 +85,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        s1.setOnClickListener(new View.OnClickListener() {
+
+        s1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
             @Override
-            public void onClick(View v) {
-                if (s1.isChecked()) {
+            public void onCheckedChanged(CompoundButton cb, boolean on) {
+                if (on) {
                     engineOff.stop();
                     engineOff.prepareAsync();
                     flag_on = true;
@@ -107,10 +109,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        s2.setOnClickListener(new View.OnClickListener() {
+        s2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
             @Override
-            public void onClick(View v) {
-                if (s2.isChecked()) {
+            public void onCheckedChanged(CompoundButton cb, boolean on) {
+                if (on) {
                     flag_up = true;
                     s2.setText("Forward");
                     if (s1.isChecked()){
