@@ -23,31 +23,13 @@ unsigned int MOTOR_PWM_Duty = 0;
 char temp[50];
 //WiFi access point.
 const char * AP[]={
-        //"Z\r\n",
         "AT+RST\r\n",
-        //"AT+CWMODE=2\r\n",
-        //"AT+CWSAP=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
         "AT+CWMODE_CUR=2\r\n",
-        "AT+CWSAP_CUR=\"Fuckthis\",\"Ciao1234567\",3,3\r\n",
-        //"AT+CIFSR\r\n",
+        "AT+CWSAP_CUR=\"BTOpenzone\",\"Ciao1234567\",3,3\r\n",
         "AT+CIPMUX=1\r\n",
         "AT+CIPSERVER=1,100\r\n",
         "AT+CIPSTO=0\r\n",
-        //"AT+SLEEP=0\r\n",
 };
-
-
-//Creates TCP server. Port number is 333 by default.
-//const char test[] = {"AT+CIPSERVER=1,100\r\n"};
-
-//Default mode as access point. Configuration saved in flash.
-//const char string2[] = {"AT+CWMODE_DEF=3\r\n"};
-
-//Default connects to Wifi.
-//const char string[] =
-
-//Default connection mode is 1, multiple connections.
-//const char string[] = { "AT+CIPMUX=1\r\n"};
 
 unsigned int i;     //Counter
 int index=0;
@@ -91,12 +73,6 @@ int main(void)
     P1DIR   |= BIT6;               // P2.6 = output
     P1SEL   |= BIT6;               // P2.6 = TA1 output
 
-//  // P1.3 Button Interrupt Config
-//  P1IE |=  BIT3;                            // P1.3 interrupt enabled
-//    P1IES |= BIT3;                            // P1.3 Hi/lo edge
-//    P1REN |= BIT3;                            // Enable Pull Up on SW2 (P1.3)
-//    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
-//                                              //BIT3 on Port 1 can be used as Switch
     // Motor Control Setup
     TACCTL2 = OUTMOD_7;            // TACCR1 reset/set
     TACCR2  = MOTOR_PWM_Duty;            // TACCR1 PWM Duty Cycle
@@ -116,8 +92,6 @@ int main(void)
     P1DIR |= TXLED;
     P1OUT &= ~TXLED;
 
-
-    //P1OUT &= 0x00;
     UCA0CTL1 |= UCSSEL_2;        // SMCLK
     UCA0BR0 = 0x08;              // 1MHz 115200
     UCA0BR1 = 0x00;              // 1MHz 115200
@@ -206,8 +180,6 @@ int main(void)
 #pragma vector=USCIAB0TX_VECTOR
 __interrupt void USCI0TX_ISR(void)
 {
-
-    //P1OUT |= TXLED;
     if (index>=size){       //if whole message has been sent
         P1OUT &= ~TXLED;    //Turn off transmitter LED
         UC0IE &= ~UCA0TXIE; // Disable transmitter interrupts
@@ -225,7 +197,6 @@ __interrupt void USCI0TX_ISR(void)
         }
     }
 }
-
 
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void timer(void)
@@ -247,19 +218,13 @@ __interrupt void USCI0RX_ISR(void)
     //On.
     if(UCA0RXBUF=='7'){
         flag_on = 1;
-        //flag_forwards = 0;
-        //flag_backwards = 0;
-
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
     //Off.
     if(UCA0RXBUF=='9'){
-        //P1SEL &= ~BIT4;
-        //P1OUT &= ~BIT4;
         flag_off = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
     }
-
     if(UCA0RXBUF=='6'){
         flag_right = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE); // Enter LPM0 w/ int until Byte RXed
@@ -282,7 +247,6 @@ __interrupt void USCI0RX_ISR(void)
     }
 }
 
-
 // Port 1 interrupt service routine
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
@@ -293,6 +257,5 @@ __interrupt void Port_1(void)
 
   //toggle direction
   P1OUT ^= BIT5;                            // P1.0 = toggle
-
   P1IFG &= ~BIT3;                           // P1.3 IFG cleared
 }
