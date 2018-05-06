@@ -47,7 +47,7 @@ public class TcpClient {
             public void run() {
                 if (out != null && !out.checkError()) {
                     System.out.println("Message: " + message);
-                    out.println(message);
+                    out.print(message);
                     out.flush();
                 }
             }
@@ -86,6 +86,7 @@ public class TcpClient {
                 Log.e("TCP SI Client", "SI: Sent.");
 
                 Log.e("TCP SI Client", "SI: Done.");
+
 
                 //receives the message which the server sends back
                 in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
