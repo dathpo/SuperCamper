@@ -213,15 +213,15 @@ __interrupt void USCI0TX_ISR(void)
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void timer(void)
 {
-        TA1CCTL0 &= ~CCIE;            // Timer 1 interrupt disable
+        TA1CCTL0 &= ~CCIE;              // Timer 1 interrupt disable
         P1OUT |= TXLED;
-        UC0IE |= UCA0TXIE;             // Enable transmitter interrupts
+        UC0IE |= UCA0TXIE;              // Enable transmitter interrupts
 }
 
 #pragma vector=TIMER1_A1_VECTOR
 __interrupt void timerServo(void)
 {
-        TA1CCTL1 &= ~CCIE;            // Timer 1 interrupt disable
+        TA1CCTL1 &= ~CCIE;              // Timer 1 interrupt disable
 }
 
 //Interrupt service routine for UART receiver
