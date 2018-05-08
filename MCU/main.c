@@ -119,14 +119,9 @@ int main(void)
     // Transmission Timer Setup
     TA1CCTL1 &= ~CCIE;                // Interrupt Disable - only to be used as a delay to servo rotation
     TA1CCR1 |= 256;                   // 0.125s
-
-
-    __delay_cycles(200000);           // Delays for setting up the ESP8266
-
+       
     TACCR1 = servo_lut[position];     // Start from centre position by default
-
-    __delay_cycles(20000);
-
+        
     // Main loop
     while (1) {
         if(flag_forwards){            // Car moves forwards
