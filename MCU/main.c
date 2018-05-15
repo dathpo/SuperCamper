@@ -249,7 +249,7 @@ __interrupt void USCI0RX_ISR(void)
     if(UCA0RXBUF=='8'){
         flag_forwards = 1;
         __bic_SR_register_on_exit(CPUOFF+GIE);
-
+    }
     // Move backwards
     if(UCA0RXBUF=='2'){
         flag_backwards = 1;
